@@ -1,10 +1,13 @@
-import { X, Star, Tv } from "lucide-react";
+import { X, Star, Tv, Heart } from "lucide-react";
 import { Movie, StreamingPlatform } from "@/app/types/movie";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 
 interface MovieModalProps {
   movie: Movie;
   onClose: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
+  isAuthenticated?: boolean;
 }
 
 const platformColors: Record<StreamingPlatform, string> = {
@@ -13,7 +16,13 @@ const platformColors: Record<StreamingPlatform, string> = {
   HBO: "bg-purple-600",
 };
 
-export function MovieModal({ movie, onClose }: MovieModalProps) {
+export function MovieModal({ 
+  movie, 
+  onClose, 
+  isFavorite = false, 
+  onToggleFavorite,
+  isAuthenticated = false 
+}: MovieModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg bg-zinc-900">
@@ -24,6 +33,19 @@ export function MovieModal({ movie, onClose }: MovieModalProps) {
         >
           <X size={24} />
         </button>
+
+        {/* Favorite Button */}
+        {isAuthenticated && onToggleFavorite && (
+          <button
+            onClick={onToggleFavorite}
+            className="absolute right-16 top-4 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+          >
+            <Heart
+              size={24}
+              className={isFavorite ? "fill-red-500 text-red-500" : ""}
+            />
+          </button>
+        )}
 
         {/* Header con poster */}
         <div className="relative h-80 overflow-hidden">
