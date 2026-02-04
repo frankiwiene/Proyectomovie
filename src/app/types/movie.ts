@@ -6,7 +6,7 @@ export interface Review {
   date: string;
 }
 
-export type StreamingPlatform = "Netflix" | "Prime Video" | "HBO";
+export type StreamingPlatform = "Netflix" | "Prime Video" | "HBO"| "Disney +"| "Crunchy Roll" | "Apple Tv";
 
 export interface Movie {
   id: string;

@@ -28,7 +28,9 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center gap-1">
             <span className="text-yellow-400">★</span>
-            <span className="text-white/70 text-sm">{movie.rating}/10</span>
+            <span className="text-white/70 text-sm">
+              {movie.rating > 0 ? `${movie.rating}/10` : "Sin calificar"}
+            </span>
           </div>
           <span className="text-white/50 text-sm">•</span>
           <span className="text-white/70 text-sm">{movie.year}</span>

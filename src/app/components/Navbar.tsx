@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { User, Heart, Menu, X } from "lucide-react";
+import { User, Heart, Menu, X, Shield } from "lucide-react";
 import { Movie } from "@/app/types/movie";
 
 interface NavbarProps {
   onCategorySelect: (category: string) => void;
   onShowFavorites: () => void;
   onLoginClick: () => void;
+  onAdminClick: () => void;
   favorites: Movie[];
   isAuthenticated: boolean;
   userName?: string;
@@ -26,6 +27,7 @@ export function Navbar({
   onCategorySelect,
   onShowFavorites,
   onLoginClick,
+  onAdminClick,
   favorites,
   isAuthenticated,
   userName,
@@ -33,12 +35,33 @@ export function Navbar({
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [menuButtonRef, setMenuButtonRef] = useState<HTMLButtonElement | null>(null);
+  const [userButtonRef, setUserButtonRef] = useState<HTMLButtonElement | null>(null);
+
+  const getMenuPosition = () => {
+    if (!menuButtonRef) return {};
+    const rect = menuButtonRef.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    };
+  };
+
+  const getUserMenuPosition = () => {
+    if (!userButtonRef) return {};
+    const rect = userButtonRef.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    };
+  };
 
   return (
     <div className="flex items-center gap-4">
       {/* Categories Menu */}
       <div className="relative">
         <button
+          ref={setMenuButtonRef}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="flex items-center gap-2 rounded-lg bg-zinc-800 px-4 py-2 text-white transition-colors hover:bg-zinc-700"
         >
@@ -49,10 +72,13 @@ export function Navbar({
         {isMenuOpen && (
           <>
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-[9998]"
               onClick={() => setIsMenuOpen(false)}
             />
-            <div className="absolute right-0 top-12 z-50 w-56 rounded-lg bg-zinc-800 shadow-lg border border-zinc-700">
+            <div 
+              className="fixed z-[9999] w-56 max-h-96 overflow-y-auto rounded-lg bg-zinc-800 shadow-xl border border-zinc-700"
+              style={getMenuPosition()}
+            >
               <div className="p-2">
                 <div className="px-3 py-2 text-xs text-white/50 uppercase">
                   Categorías
@@ -96,6 +122,7 @@ export function Navbar({
         {isAuthenticated ? (
           <>
             <button
+              ref={setUserButtonRef}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
             >
@@ -106,14 +133,27 @@ export function Navbar({
             {isUserMenuOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-40"
+                  className="fixed inset-0 z-[9998]"
                   onClick={() => setIsUserMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-12 z-50 w-48 rounded-lg bg-zinc-800 shadow-lg border border-zinc-700">
+                <div 
+                  className="fixed z-[9999] w-48 rounded-lg bg-zinc-800 shadow-xl border border-zinc-700"
+                  style={getUserMenuPosition()}
+                >
                   <div className="p-2">
                     <div className="px-3 py-2 text-sm text-white border-b border-zinc-700">
                       {userName}
                     </div>
+                    <button
+                      onClick={() => {
+                        onAdminClick();
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-white transition-colors hover:bg-zinc-700"
+                    >
+                      <Shield size={16} className="text-blue-500" />
+                      <span>Panel Admin</span>
+                    </button>
                     <button
                       onClick={() => {
                         onLogout();
