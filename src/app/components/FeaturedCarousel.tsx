@@ -51,7 +51,7 @@ export function FeaturedCarousel({
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8">
           <div className="max-w-2xl">
-            <h2 className="text-white text-4xl mb-3">
+            <h2 className="text-white text-4xl mb-3" style={{ fontFamily: 'Sneakers Pro, sans-serif' }}>
               {currentMovie.title}
             </h2>
             <div className="flex items-center gap-4 mb-4">

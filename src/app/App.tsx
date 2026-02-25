@@ -22,11 +22,15 @@ export default function App() {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [movieToEdit, setMovieToEdit] = useState<Movie | null>(null);
 
   const handleLogin = (email: string, password: string) => {
     // Simulación de login - en producción esto se conectaría con un backend
     setIsAuthenticated(true);
     setUserName(email.split("@")[0]);
+    // Simular que el usuario es admin si el email contiene "admin"
+    setIsAdmin(email.toLowerCase().includes("admin"));
   };
 
   const handleRegister = (
@@ -37,12 +41,15 @@ export default function App() {
     // Simulación de registro - en producción esto se conectaría con un backend
     setIsAuthenticated(true);
     setUserName(name);
+    // Simular que el usuario es admin si el email contiene "admin"
+    setIsAdmin(email.toLowerCase().includes("admin"));
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserName("");
     setFavorites([]);
+    setIsAdmin(false);
   };
 
   const toggleFavorite = (movie: Movie) => {
@@ -67,7 +74,91 @@ export default function App() {
     setMovies((prev) => [...prev, movieWithId]);
   };
 
-  const handleAddReview = (movieId: string, review: Omit<Review, "id" | "date">) => {
+  const handleEditMovie = (movieId: string, updatedMovie: Omit<Movie, "id">) => {
+    setMovies((prevMovies) =>
+      prevMovies.map((movie) =>
+        movie.id === movieId
+          ? {
+              ...updatedMovie,
+              id: movieId,
+              // Mantener las reseñas y el rating existente
+              reviews: movie.reviews,
+              rating: movie.rating,
+            }
+          : movie
+      )
+    );
+
+    // Actualizar selectedMovie si está abierto
+    setSelectedMovie((prevSelected) => {
+      if (prevSelected && prevSelected.id === movieId) {
+        const movie = movies.find((m) => m.id === movieId);
+        if (movie) {
+          return {
+            ...updatedMovie,
+            id: movieId,
+            reviews: movie.reviews,
+            rating: movie.rating,
+          };
+        }
+      }
+      return prevSelected;
+    });
+
+    setMovieToEdit(null);
+  };
+
+  const handleDeleteReview = (movieId: string, reviewId: string) => {
+    setMovies((prevMovies) => {
+      return prevMovies.map((movie) => {
+        if (movie.id === movieId) {
+          const updatedReviews = movie.reviews.filter((r) => r.id !== reviewId);
+
+          // Recalcular rating
+          let newRating = 0;
+          if (updatedReviews.length > 0) {
+            const averageRating =
+              updatedReviews.reduce((acc, rev) => acc + rev.rating, 0) /
+              updatedReviews.length;
+            newRating = Math.round(averageRating * 10) / 10;
+          }
+
+          return {
+            ...movie,
+            reviews: updatedReviews,
+            rating: newRating,
+          };
+        }
+        return movie;
+      });
+    });
+
+    // Actualizar selectedMovie para reflejar los cambios inmediatamente
+    setSelectedMovie((prevSelected) => {
+      if (prevSelected && prevSelected.id === movieId) {
+        const movie = movies.find((m) => m.id === movieId);
+        if (movie) {
+          const updatedReviews = movie.reviews.filter((r) => r.id !== reviewId);
+          let newRating = 0;
+          if (updatedReviews.length > 0) {
+            const averageRating =
+              updatedReviews.reduce((acc, rev) => acc + rev.rating, 0) /
+              updatedReviews.length;
+            newRating = Math.round(averageRating * 10) / 10;
+          }
+
+          return {
+            ...movie,
+            reviews: updatedReviews,
+            rating: newRating,
+          };
+        }
+      }
+      return prevSelected;
+    });
+  };
+
+  const handleAddReview = (movieId: string, review: Omit<Review, "id" | "date" | "likes" | "dislikes" | "likedBy" | "dislikedBy" | "reported" | "reportedBy">) => {
     setMovies((prevMovies) => {
       return prevMovies.map((movie) => {
         if (movie.id === movieId) {
@@ -79,7 +170,13 @@ export default function App() {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            })
+            }),
+            likes: 0,
+            dislikes: 0,
+            likedBy: [],
+            dislikedBy: [],
+            reported: false,
+            reportedBy: [],
           };
 
           // Agregar la reseña
@@ -111,7 +208,13 @@ export default function App() {
               year: 'numeric',
               month: 'long',
               day: 'numeric'
-            })
+            }),
+            likes: 0,
+            dislikes: 0,
+            likedBy: [],
+            dislikedBy: [],
+            reported: false,
+            reportedBy: [],
           };
           const updatedReviews = [...movie.reviews, newReview];
           const averageRating = updatedReviews.reduce((acc, rev) => acc + rev.rating, 0) / updatedReviews.length;
@@ -123,6 +226,242 @@ export default function App() {
             rating: roundedRating
           };
         }
+      }
+      return prevSelected;
+    });
+  };
+
+  const handleLikeReview = (movieId: string, reviewId: string, userName: string) => {
+    setMovies((prevMovies) => {
+      return prevMovies.map((movie) => {
+        if (movie.id === movieId) {
+          const updatedReviews = movie.reviews.map((review) => {
+            if (review.id === reviewId) {
+              const hasLiked = review.likedBy.includes(userName);
+              const hasDisliked = review.dislikedBy.includes(userName);
+              
+              // Si ya dio like, quitar el like
+              if (hasLiked) {
+                return {
+                  ...review,
+                  likes: review.likes - 1,
+                  likedBy: review.likedBy.filter((user) => user !== userName),
+                };
+              }
+              
+              // Si había dado dislike, quitarlo y dar like
+              if (hasDisliked) {
+                return {
+                  ...review,
+                  likes: review.likes + 1,
+                  dislikes: review.dislikes - 1,
+                  likedBy: [...review.likedBy, userName],
+                  dislikedBy: review.dislikedBy.filter((user) => user !== userName),
+                };
+              }
+              
+              // Dar like por primera vez
+              return {
+                ...review,
+                likes: review.likes + 1,
+                likedBy: [...review.likedBy, userName],
+              };
+            }
+            return review;
+          });
+          
+          return {
+            ...movie,
+            reviews: updatedReviews,
+          };
+        }
+        return movie;
+      });
+    });
+
+    // Actualizar selectedMovie
+    setSelectedMovie((prevSelected) => {
+      if (prevSelected && prevSelected.id === movieId) {
+        const updatedReviews = prevSelected.reviews.map((review) => {
+          if (review.id === reviewId) {
+            const hasLiked = review.likedBy.includes(userName);
+            const hasDisliked = review.dislikedBy.includes(userName);
+            
+            if (hasLiked) {
+              return {
+                ...review,
+                likes: review.likes - 1,
+                likedBy: review.likedBy.filter((user) => user !== userName),
+              };
+            }
+            
+            if (hasDisliked) {
+              return {
+                ...review,
+                likes: review.likes + 1,
+                dislikes: review.dislikes - 1,
+                likedBy: [...review.likedBy, userName],
+                dislikedBy: review.dislikedBy.filter((user) => user !== userName),
+              };
+            }
+            
+            return {
+              ...review,
+              likes: review.likes + 1,
+              likedBy: [...review.likedBy, userName],
+            };
+          }
+          return review;
+        });
+        
+        return {
+          ...prevSelected,
+          reviews: updatedReviews,
+        };
+      }
+      return prevSelected;
+    });
+  };
+
+  const handleDislikeReview = (movieId: string, reviewId: string, userName: string) => {
+    setMovies((prevMovies) => {
+      return prevMovies.map((movie) => {
+        if (movie.id === movieId) {
+          const updatedReviews = movie.reviews.map((review) => {
+            if (review.id === reviewId) {
+              const hasLiked = review.likedBy.includes(userName);
+              const hasDisliked = review.dislikedBy.includes(userName);
+              
+              // Si ya dio dislike, quitar el dislike
+              if (hasDisliked) {
+                return {
+                  ...review,
+                  dislikes: review.dislikes - 1,
+                  dislikedBy: review.dislikedBy.filter((user) => user !== userName),
+                };
+              }
+              
+              // Si había dado like, quitarlo y dar dislike
+              if (hasLiked) {
+                return {
+                  ...review,
+                  likes: review.likes - 1,
+                  dislikes: review.dislikes + 1,
+                  likedBy: review.likedBy.filter((user) => user !== userName),
+                  dislikedBy: [...review.dislikedBy, userName],
+                };
+              }
+              
+              // Dar dislike por primera vez
+              return {
+                ...review,
+                dislikes: review.dislikes + 1,
+                dislikedBy: [...review.dislikedBy, userName],
+              };
+            }
+            return review;
+          });
+          
+          return {
+            ...movie,
+            reviews: updatedReviews,
+          };
+        }
+        return movie;
+      });
+    });
+
+    // Actualizar selectedMovie
+    setSelectedMovie((prevSelected) => {
+      if (prevSelected && prevSelected.id === movieId) {
+        const updatedReviews = prevSelected.reviews.map((review) => {
+          if (review.id === reviewId) {
+            const hasLiked = review.likedBy.includes(userName);
+            const hasDisliked = review.dislikedBy.includes(userName);
+            
+            if (hasDisliked) {
+              return {
+                ...review,
+                dislikes: review.dislikes - 1,
+                dislikedBy: review.dislikedBy.filter((user) => user !== userName),
+              };
+            }
+            
+            if (hasLiked) {
+              return {
+                ...review,
+                likes: review.likes - 1,
+                dislikes: review.dislikes + 1,
+                likedBy: review.likedBy.filter((user) => user !== userName),
+                dislikedBy: [...review.dislikedBy, userName],
+              };
+            }
+            
+            return {
+              ...review,
+              dislikes: review.dislikes + 1,
+              dislikedBy: [...review.dislikedBy, userName],
+            };
+          }
+          return review;
+        });
+        
+        return {
+          ...prevSelected,
+          reviews: updatedReviews,
+        };
+      }
+      return prevSelected;
+    });
+  };
+
+  const handleReportReview = (movieId: string, reviewId: string, userName: string) => {
+    setMovies((prevMovies) => {
+      return prevMovies.map((movie) => {
+        if (movie.id === movieId) {
+          const updatedReviews = movie.reviews.map((review) => {
+            if (review.id === reviewId) {
+              // Solo permitir reportar una vez por usuario
+              if (!review.reportedBy.includes(userName)) {
+                return {
+                  ...review,
+                  reported: true,
+                  reportedBy: [...review.reportedBy, userName],
+                };
+              }
+            }
+            return review;
+          });
+          
+          return {
+            ...movie,
+            reviews: updatedReviews,
+          };
+        }
+        return movie;
+      });
+    });
+
+    // Actualizar selectedMovie
+    setSelectedMovie((prevSelected) => {
+      if (prevSelected && prevSelected.id === movieId) {
+        const updatedReviews = prevSelected.reviews.map((review) => {
+          if (review.id === reviewId) {
+            if (!review.reportedBy.includes(userName)) {
+              return {
+                ...review,
+                reported: true,
+                reportedBy: [...review.reportedBy, userName],
+              };
+            }
+          }
+          return review;
+        });
+        
+        return {
+          ...prevSelected,
+          reviews: updatedReviews,
+        };
       }
       return prevSelected;
     });
@@ -155,7 +494,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               <Film className="text-purple-500" size={32} />
               <div>
-                <h1 className="text-white text-3xl">
+                <h1 className="text-white text-3xl" style={{ fontFamily: 'Yerk, sans-serif' }}>
                  Filmario 
                 </h1>
                 <p className="text-white/60 text-sm mt-1">
@@ -244,6 +583,16 @@ export default function App() {
           isAuthenticated={isAuthenticated}
           currentUser={userName}
           onAddReview={handleAddReview}
+          onDeleteReview={handleDeleteReview}
+          isAdmin={isAdmin}
+          onEditMovie={() => {
+            setMovieToEdit(selectedMovie);
+            setIsAdminPanelOpen(true);
+            setSelectedMovie(null);
+          }}
+          onLikeReview={handleLikeReview}
+          onDislikeReview={handleDislikeReview}
+          onReportReview={handleReportReview}
         />
       )}
 
@@ -259,8 +608,13 @@ export default function App() {
       {/* Admin Panel */}
       {isAdminPanelOpen && (
         <AdminPanel
-          onClose={() => setIsAdminPanelOpen(false)}
+          onClose={() => {
+            setIsAdminPanelOpen(false);
+            setMovieToEdit(null);
+          }}
           onAddMovie={handleAddMovie}
+          onEditMovie={handleEditMovie}
+          movieToEdit={movieToEdit}
         />
       )}
     </div>

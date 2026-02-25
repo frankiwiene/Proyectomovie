@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { X, Upload, Plus } from "lucide-react";
+import { X, Upload, Plus, Edit } from "lucide-react";
 import { Movie, StreamingPlatform } from "@/app/types/movie";
 
 interface AdminPanelProps {
   onClose: () => void;
   onAddMovie: (movie: Omit<Movie, "id">) => void;
+  onEditMovie?: (movieId: string, movie: Omit<Movie, "id">) => void;
+  movieToEdit?: Movie | null;
 }
 
 const availableGenres = [
@@ -22,13 +24,13 @@ const availablePlatforms: StreamingPlatform[] = [
   "HBO",
 ];
 
-export function AdminPanel({ onClose, onAddMovie }: AdminPanelProps) {
-  const [title, setTitle] = useState("");
-  const [year, setYear] = useState("");
-  const [genre, setGenre] = useState(availableGenres[0]);
-  const [description, setDescription] = useState("");
-  const [poster, setPoster] = useState("");
-  const [platforms, setPlatforms] = useState<StreamingPlatform[]>([]);
+export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: AdminPanelProps) {
+  const [title, setTitle] = useState(movieToEdit?.title || "");
+  const [year, setYear] = useState(movieToEdit?.year?.toString() || "");
+  const [genre, setGenre] = useState(movieToEdit?.genre || availableGenres[0]);
+  const [description, setDescription] = useState(movieToEdit?.description || "");
+  const [poster, setPoster] = useState(movieToEdit?.poster || "");
+  const [platforms, setPlatforms] = useState<StreamingPlatform[]>(movieToEdit?.platforms || []);
 
   const handlePlatformToggle = (platform: StreamingPlatform) => {
     setPlatforms((prev) =>
@@ -56,7 +58,11 @@ export function AdminPanel({ onClose, onAddMovie }: AdminPanelProps) {
       reviews: [],
     };
 
-    onAddMovie(newMovie);
+    if (movieToEdit) {
+      onEditMovie!(movieToEdit.id, newMovie);
+    } else {
+      onAddMovie(newMovie);
+    }
     
     // Reset form
     setTitle("");
@@ -66,7 +72,8 @@ export function AdminPanel({ onClose, onAddMovie }: AdminPanelProps) {
     setPoster("");
     setPlatforms([]);
     
-    alert("¡Película agregada exitosamente!");
+    alert(movieToEdit ? "¡Película actualizada exitosamente!" : "¡Película agregada exitosamente!");
+    onClose();
   };
 
   return (
@@ -75,9 +82,13 @@ export function AdminPanel({ onClose, onAddMovie }: AdminPanelProps) {
         {/* Header fijo */}
         <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 p-6 rounded-t-lg flex-shrink-0">
           <div>
-            <h2 className="text-white text-2xl">Panel de Administrador</h2>
+            <h2 className="text-white text-2xl">
+              {movieToEdit ? "Editar Película" : "Panel de Administrador"}
+            </h2>
             <p className="text-white/60 text-sm mt-1">
-              Agrega una nueva película a la base de datos
+              {movieToEdit 
+                ? "Modifica la información de la película" 
+                : "Agrega una nueva película a la base de datos"}
             </p>
           </div>
           <button
@@ -220,8 +231,17 @@ export function AdminPanel({ onClose, onAddMovie }: AdminPanelProps) {
                 type="submit"
                 className="flex items-center gap-2 rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700"
               >
-                <Plus size={20} />
-                Agregar Película
+                {movieToEdit ? (
+                  <>
+                    <Edit size={20} />
+                    Actualizar Película
+                  </>
+                ) : (
+                  <>
+                    <Plus size={20} />
+                    Agregar Película
+                  </>
+                )}
               </button>
               <button
                 type="button"

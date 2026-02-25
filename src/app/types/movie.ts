@@ -4,6 +4,12 @@ export interface Review {
   rating: number;
   comment: string;
   date: string;
+  likes: number;
+  dislikes: number;
+  likedBy: string[];
+  dislikedBy: string[];
+  reported: boolean;
+  reportedBy: string[];
 }
 
 export type StreamingPlatform = "Netflix" | "Prime Video" | "HBO"| "Disney +"| "Crunchy Roll" | "Apple Tv";
