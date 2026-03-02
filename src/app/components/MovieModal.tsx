@@ -1,5 +1,20 @@
-import { X, Star, Tv, Heart, Trash2, Edit, ThumbsUp, ThumbsDown, Flag } from "lucide-react";
-import { Movie, StreamingPlatform, Review } from "@/app/types/movie";
+import {
+  X,
+  Star,
+  Tv,
+  Heart,
+  Trash2,
+  Edit,
+  ThumbsUp,
+  ThumbsDown,
+  Flag,
+  Play,
+} from "lucide-react";
+import {
+  Movie,
+  StreamingPlatform,
+  Review,
+} from "@/app/types/movie";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { useState } from "react";
 
@@ -10,13 +25,38 @@ interface MovieModalProps {
   onToggleFavorite?: () => void;
   isAuthenticated?: boolean;
   currentUser?: string;
-  onAddReview?: (movieId: string, review: Omit<Review, "id" | "date" | "likes" | "dislikes" | "likedBy" | "dislikedBy" | "reported" | "reportedBy">) => void;
+  onAddReview?: (
+    movieId: string,
+    review: Omit<
+      Review,
+      | "id"
+      | "date"
+      | "likes"
+      | "dislikes"
+      | "likedBy"
+      | "dislikedBy"
+      | "reported"
+      | "reportedBy"
+    >,
+  ) => void;
   onDeleteReview?: (movieId: string, reviewId: string) => void;
   isAdmin?: boolean;
   onEditMovie?: () => void;
-  onLikeReview?: (movieId: string, reviewId: string, userName: string) => void;
-  onDislikeReview?: (movieId: string, reviewId: string, userName: string) => void;
-  onReportReview?: (movieId: string, reviewId: string, userName: string) => void;
+  onLikeReview?: (
+    movieId: string,
+    reviewId: string,
+    userName: string,
+  ) => void;
+  onDislikeReview?: (
+    movieId: string,
+    reviewId: string,
+    userName: string,
+  ) => void;
+  onReportReview?: (
+    movieId: string,
+    reviewId: string,
+    userName: string,
+  ) => void;
 }
 
 const platformColors: Record<StreamingPlatform, string> = {
@@ -25,13 +65,13 @@ const platformColors: Record<StreamingPlatform, string> = {
   HBO: "bg-purple-600",
   "Disney +": "bg-blue-400",
   "Crunchy Roll": "bg-orange-400",
-  "Apple Tv" : "bg-gray-400"
+  "Apple Tv": "bg-gray-400",
 };
 
-export function MovieModal({ 
-  movie, 
-  onClose, 
-  isFavorite = false, 
+export function MovieModal({
+  movie,
+  onClose,
+  isFavorite = false,
   onToggleFavorite,
   isAuthenticated = false,
   currentUser,
@@ -41,17 +81,27 @@ export function MovieModal({
   onEditMovie,
   onLikeReview,
   onDislikeReview,
-  onReportReview
+  onReportReview,
 }: MovieModalProps) {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
 
   const handleAddReview = () => {
     if (onAddReview && currentUser) {
-      const newReview: Omit<Review, "id" | "date" | "likes" | "dislikes" | "likedBy" | "dislikedBy" | "reported" | "reportedBy"> = {
+      const newReview: Omit<
+        Review,
+        | "id"
+        | "date"
+        | "likes"
+        | "dislikes"
+        | "likedBy"
+        | "dislikedBy"
+        | "reported"
+        | "reportedBy"
+      > = {
         userName: currentUser,
         rating: reviewRating,
-        comment: reviewComment
+        comment: reviewComment,
       };
       onAddReview(movie.id, newReview);
       setReviewRating(0);
@@ -78,7 +128,9 @@ export function MovieModal({
           >
             <Heart
               size={24}
-              className={isFavorite ? "fill-red-500 text-red-500" : ""}
+              className={
+                isFavorite ? "fill-red-500 text-red-500" : ""
+              }
             />
           </button>
         )}
@@ -105,20 +157,35 @@ export function MovieModal({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6">
-            <h2 className="text-white text-3xl mb-2" style={{ fontFamily: 'Sneakers Pro, sans-serif' }}>{movie.title}</h2>
+            <h2
+              className="text-white text-3xl mb-2"
+              style={{ fontFamily: "Sneakers Pro, sans-serif" }}
+            >
+              {movie.title}
+            </h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Star className="fill-yellow-400 text-yellow-400" size={20} />
+                <Star
+                  className="fill-yellow-400 text-yellow-400"
+                  size={20}
+                />
                 <span className="text-white text-xl">
-                  {movie.rating > 0 ? `${movie.rating}/10` : "Sin calificar"}
+                  {movie.rating > 0
+                    ? `${movie.rating}/10`
+                    : "Sin calificar"}
                 </span>
               </div>
-              <span className="text-white/70">{movie.year}</span>
-              <span className="text-white/70">{movie.genre}</span>
+              <span className="text-white/70">
+                {movie.year}
+              </span>
+              <span className="text-white/70">
+                {movie.genre}
+              </span>
             </div>
             {movie.rating === 0 && (
               <p className="text-white/50 text-sm mt-2">
-                Esta película aún no tiene reseñas. ¡Sé el primero en calificarla!
+                Esta película aún no tiene reseñas. ¡Sé el
+                primero en calificarla!
               </p>
             )}
           </div>
@@ -130,7 +197,9 @@ export function MovieModal({
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-3">
               <Tv className="text-white" size={20} />
-              <h3 className="text-white text-xl">Disponible en</h3>
+              <h3 className="text-white text-xl">
+                Disponible en
+              </h3>
             </div>
             <div className="flex flex-wrap gap-3">
               {movie.platforms.map((platform) => (
@@ -146,9 +215,55 @@ export function MovieModal({
 
           {/* Descripción */}
           <div className="mb-8">
-            <h3 className="text-white text-xl mb-3">Descripción</h3>
-            <p className="text-white/80 leading-relaxed">{movie.description}</p>
+            <h3 className="text-white text-xl mb-3">
+              Descripción
+            </h3>
+            <p className="text-white/80 leading-relaxed">
+              {movie.description}
+            </p>
           </div>
+
+          {/* Video */}
+          {(movie as any).videoUrl && (
+            <div className="mb-8">
+              <h3 className="text-white text-xl mb-3 flex items-center gap-2">
+                <Play size={20} className="text-purple-400" />
+                Trailer / Video
+              </h3>
+              {/\.(mp4|webm|ogg)(\?.*)?$/i.test(
+                (movie as any).videoUrl,
+              ) ? (
+                <video
+                  src={(movie as any).videoUrl}
+                  controls
+                  className="w-full rounded-lg bg-black max-h-72"
+                />
+              ) : (
+                <div
+                  className="relative w-full rounded-lg overflow-hidden bg-black"
+                  style={{ paddingTop: "56.25%" }}
+                >
+                  <iframe
+                    src={
+                      (movie as any).videoUrl.match(
+                        /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+                      )
+                        ? `https://www.youtube.com/embed/${(movie as any).videoUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)[1]}`
+                        : (movie as any).videoUrl.match(
+                              /vimeo\.com\/(?:video\/)?(\d+)/,
+                            )
+                          ? `https://player.vimeo.com/video/${(movie as any).videoUrl.match(/vimeo\.com\/(?:video\/)?(\d+)/)[1]}`
+                          : (movie as any).videoUrl
+                    }
+                    className="absolute inset-0 w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Video"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Reseñas */}
           <div>
@@ -165,12 +280,18 @@ export function MovieModal({
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
                         <span className="text-white">
-                          {review.userName.charAt(0).toUpperCase()}
+                          {review.userName
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <p className="text-white">{review.userName}</p>
-                        <p className="text-white/50 text-sm">{review.date}</p>
+                        <p className="text-white">
+                          {review.userName}
+                        </p>
+                        <p className="text-white/50 text-sm">
+                          {review.date}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -178,75 +299,155 @@ export function MovieModal({
                         className="fill-yellow-400 text-yellow-400"
                         size={16}
                       />
-                      <span className="text-white">{review.rating}/10</span>
+                      <span className="text-white">
+                        {review.rating}/10
+                      </span>
                     </div>
                   </div>
-                  <p className="text-white/70">{review.comment}</p>
-                  
+                  <p className="text-white/70">
+                    {review.comment}
+                  </p>
+
                   {/* Botones de interacción: Like, Dislike y Reportar */}
                   <div className="mt-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {/* Like */}
                       <button
                         onClick={() => {
-                          if (isAuthenticated && currentUser && onLikeReview) {
-                            onLikeReview(movie.id, review.id, currentUser);
+                          if (
+                            isAuthenticated &&
+                            currentUser &&
+                            onLikeReview
+                          ) {
+                            onLikeReview(
+                              movie.id,
+                              review.id,
+                              currentUser,
+                            );
                           }
                         }}
                         disabled={!isAuthenticated}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                          isAuthenticated && currentUser && review.likedBy.includes(currentUser)
+                          isAuthenticated &&
+                          currentUser &&
+                          review.likedBy.includes(currentUser)
                             ? "bg-green-600/30 text-green-400"
                             : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        <ThumbsUp size={14} className={currentUser && review.likedBy.includes(currentUser) ? "fill-green-400" : ""} />
+                        <ThumbsUp
+                          size={14}
+                          className={
+                            currentUser &&
+                            review.likedBy.includes(currentUser)
+                              ? "fill-green-400"
+                              : ""
+                          }
+                        />
                         <span>{review.likes}</span>
                       </button>
 
                       {/* Dislike */}
                       <button
                         onClick={() => {
-                          if (isAuthenticated && currentUser && onDislikeReview) {
-                            onDislikeReview(movie.id, review.id, currentUser);
+                          if (
+                            isAuthenticated &&
+                            currentUser &&
+                            onDislikeReview
+                          ) {
+                            onDislikeReview(
+                              movie.id,
+                              review.id,
+                              currentUser,
+                            );
                           }
                         }}
                         disabled={!isAuthenticated}
                         className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                          isAuthenticated && currentUser && review.dislikedBy.includes(currentUser)
+                          isAuthenticated &&
+                          currentUser &&
+                          review.dislikedBy.includes(
+                            currentUser,
+                          )
                             ? "bg-red-600/30 text-red-400"
                             : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        <ThumbsDown size={14} className={currentUser && review.dislikedBy.includes(currentUser) ? "fill-red-400" : ""} />
+                        <ThumbsDown
+                          size={14}
+                          className={
+                            currentUser &&
+                            review.dislikedBy.includes(
+                              currentUser,
+                            )
+                              ? "fill-red-400"
+                              : ""
+                          }
+                        />
                         <span>{review.dislikes}</span>
                       </button>
 
                       {/* Reportar (solo usuarios autenticados no admin) */}
-                      {isAuthenticated && !isAdmin && currentUser && onReportReview && (
-                        <button
-                          onClick={() => {
-                            if (window.confirm('¿Estás seguro de que quieres reportar este comentario?')) {
-                              onReportReview(movie.id, review.id, currentUser);
-                            }
-                          }}
-                          disabled={review.reportedBy.includes(currentUser)}
-                          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                            review.reportedBy.includes(currentUser)
-                              ? "bg-orange-600/30 text-orange-400"
-                              : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          <Flag size={14} className={review.reportedBy.includes(currentUser) ? "fill-orange-400" : ""} />
-                          <span>{review.reportedBy.includes(currentUser) ? "Reportado" : "Reportar"}</span>
-                        </button>
-                      )}
+                      {isAuthenticated &&
+                        !isAdmin &&
+                        currentUser &&
+                        onReportReview && (
+                          <button
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  "¿Estás seguro de que quieres reportar este comentario?",
+                                )
+                              ) {
+                                onReportReview(
+                                  movie.id,
+                                  review.id,
+                                  currentUser,
+                                );
+                              }
+                            }}
+                            disabled={review.reportedBy.includes(
+                              currentUser,
+                            )}
+                            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                              review.reportedBy.includes(
+                                currentUser,
+                              )
+                                ? "bg-orange-600/30 text-orange-400"
+                                : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            <Flag
+                              size={14}
+                              className={
+                                review.reportedBy.includes(
+                                  currentUser,
+                                )
+                                  ? "fill-orange-400"
+                                  : ""
+                              }
+                            />
+                            <span>
+                              {review.reportedBy.includes(
+                                currentUser,
+                              )
+                                ? "Reportado"
+                                : "Reportar"}
+                            </span>
+                          </button>
+                        )}
 
                       {/* Indicador de comentario reportado (solo admin) */}
                       {isAdmin && review.reported && (
                         <div className="flex items-center gap-1.5 rounded-lg bg-orange-600/30 px-3 py-1.5 text-sm text-orange-400">
-                          <Flag size={14} className="fill-orange-400" />
-                          <span>Reportado ({review.reportedBy.length})</span>
+                          <Flag
+                            size={14}
+                            className="fill-orange-400"
+                          />
+                          <span>
+                            Reportado (
+                            {review.reportedBy.length})
+                          </span>
                         </div>
                       )}
                     </div>
@@ -255,7 +456,11 @@ export function MovieModal({
                     {isAdmin && onDeleteReview && (
                       <button
                         onClick={() => {
-                          if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+                          if (
+                            window.confirm(
+                              "¿Estás seguro de que quieres eliminar este comentario?",
+                            )
+                          ) {
                             onDeleteReview(movie.id, review.id);
                           }
                         }}
@@ -274,42 +479,54 @@ export function MovieModal({
           {/* Agregar Reseña */}
           {isAuthenticated && currentUser && (
             <div className="mt-8 rounded-lg bg-zinc-800 p-6 border-2 border-purple-500/30">
-              <h3 className="text-white text-xl mb-4">Añadir tu comentario</h3>
-              
+              <h3 className="text-white text-xl mb-4">
+                Añadir tu comentario
+              </h3>
+
               {/* Sistema de calificación con estrellas */}
               <div className="mb-4">
-                <p className="text-white/70 text-sm mb-2">Tu calificación:</p>
+                <p className="text-white/70 text-sm mb-2">
+                  Tu calificación:
+                </p>
                 <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                    <button
-                      key={rating}
-                      onClick={() => setReviewRating(rating)}
-                      className="transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`${
-                          reviewRating >= rating
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "fill-zinc-700 text-zinc-700"
-                        }`}
-                        size={24}
-                      />
-                    </button>
-                  ))}
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(
+                    (rating) => (
+                      <button
+                        key={rating}
+                        onClick={() => setReviewRating(rating)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`${
+                            reviewRating >= rating
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "fill-zinc-700 text-zinc-700"
+                          }`}
+                          size={24}
+                        />
+                      </button>
+                    ),
+                  )}
                   {reviewRating > 0 && (
-                    <span className="text-white ml-2">{reviewRating}/10</span>
+                    <span className="text-white ml-2">
+                      {reviewRating}/10
+                    </span>
                   )}
                 </div>
               </div>
 
               {/* Comentario */}
               <div className="mb-4">
-                <p className="text-white/70 text-sm mb-2">Tu comentario:</p>
+                <p className="text-white/70 text-sm mb-2">
+                  Tu comentario:
+                </p>
                 <textarea
                   className="w-full rounded-lg bg-zinc-900 p-4 text-white border border-zinc-700 focus:border-purple-500 focus:outline-none min-h-[120px] resize-none"
                   placeholder="Escribe tu opinión sobre esta película..."
                   value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
+                  onChange={(e) =>
+                    setReviewComment(e.target.value)
+                  }
                 />
               </div>
 
@@ -317,9 +534,13 @@ export function MovieModal({
               <button
                 className="w-full rounded-lg bg-purple-600 px-6 py-3 text-white font-medium transition-all hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:text-white/50"
                 onClick={handleAddReview}
-                disabled={reviewRating === 0 || reviewComment.trim() === ""}
+                disabled={
+                  reviewRating === 0 ||
+                  reviewComment.trim() === ""
+                }
               >
-                {reviewRating === 0 || reviewComment.trim() === ""
+                {reviewRating === 0 ||
+                reviewComment.trim() === ""
                   ? "Completa tu calificación y comentario"
                   : "Publicar Reseña"}
               </button>
@@ -330,7 +551,10 @@ export function MovieModal({
           {!isAuthenticated && (
             <div className="mt-8 rounded-lg bg-zinc-800 p-6 border-2 border-zinc-700 text-center">
               <p className="text-white/70">
-                <span className="text-purple-400">Inicia sesión</span> para dejar tu reseña y calificación
+                <span className="text-purple-400">
+                  Inicia sesión
+                </span>{" "}
+                para dejar tu reseña y calificación
               </p>
             </div>
           )}

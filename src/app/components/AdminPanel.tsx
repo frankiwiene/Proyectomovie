@@ -1,11 +1,21 @@
 import { useState } from "react";
-import { X, Upload, Plus, Edit } from "lucide-react";
+import {
+  X,
+  Upload,
+  Plus,
+  Edit,
+  Play,
+  Video,
+} from "lucide-react";
 import { Movie, StreamingPlatform } from "@/app/types/movie";
 
 interface AdminPanelProps {
   onClose: () => void;
   onAddMovie: (movie: Omit<Movie, "id">) => void;
-  onEditMovie?: (movieId: string, movie: Omit<Movie, "id">) => void;
+  onEditMovie?: (
+    movieId: string,
+    movie: Omit<Movie, "id">,
+  ) => void;
   movieToEdit?: Movie | null;
 }
 
@@ -24,19 +34,72 @@ const availablePlatforms: StreamingPlatform[] = [
   "HBO",
 ];
 
-export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: AdminPanelProps) {
-  const [title, setTitle] = useState(movieToEdit?.title || "");
-  const [year, setYear] = useState(movieToEdit?.year?.toString() || "");
-  const [genre, setGenre] = useState(movieToEdit?.genre || availableGenres[0]);
-  const [description, setDescription] = useState(movieToEdit?.description || "");
-  const [poster, setPoster] = useState(movieToEdit?.poster || "");
-  const [platforms, setPlatforms] = useState<StreamingPlatform[]>(movieToEdit?.platforms || []);
+function getEmbedUrl(url: string): string | null {
+  if (!url) return null;
 
-  const handlePlatformToggle = (platform: StreamingPlatform) => {
+  // YouTube
+  const youtubeMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  // Direct video file (mp4, webm, ogg)
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)) {
+    return url; // handled separately as <video> tag
+  }
+
+  return null;
+}
+
+function isDirectVideo(url: string): boolean {
+  return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+}
+
+export function AdminPanel({
+  onClose,
+  onAddMovie,
+  onEditMovie,
+  movieToEdit,
+}: AdminPanelProps) {
+  const [title, setTitle] = useState(movieToEdit?.title || "");
+  const [year, setYear] = useState(
+    movieToEdit?.year?.toString() || "",
+  );
+  const [genre, setGenre] = useState(
+    movieToEdit?.genre || availableGenres[0],
+  );
+  const [description, setDescription] = useState(
+    movieToEdit?.description || "",
+  );
+  const [poster, setPoster] = useState(
+    movieToEdit?.poster || "",
+  );
+  const [platforms, setPlatforms] = useState<
+    StreamingPlatform[]
+  >(movieToEdit?.platforms || []);
+  const [videoUrl, setVideoUrl] = useState(
+    (movieToEdit as any)?.videoUrl || "",
+  );
+  const [videoError, setVideoError] = useState(false);
+
+  const embedUrl = getEmbedUrl(videoUrl);
+  const directVideo = embedUrl && isDirectVideo(videoUrl);
+
+  const handlePlatformToggle = (
+    platform: StreamingPlatform,
+  ) => {
     setPlatforms((prev) =>
       prev.includes(platform)
         ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
+        : [...prev, platform],
     );
   };
 
@@ -44,7 +107,9 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
     e.preventDefault();
 
     if (platforms.length === 0) {
-      alert("Debes seleccionar al menos una plataforma de streaming");
+      alert(
+        "Debes seleccionar al menos una plataforma de streaming",
+      );
       return;
     }
 
@@ -56,23 +121,28 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
       poster,
       platforms,
       reviews: [],
-    };
+      ...(videoUrl && { videoUrl }),
+    } as any;
 
     if (movieToEdit) {
       onEditMovie!(movieToEdit.id, newMovie);
     } else {
       onAddMovie(newMovie);
     }
-    
-    // Reset form
+
     setTitle("");
     setYear("");
     setGenre(availableGenres[0]);
     setDescription("");
     setPoster("");
     setPlatforms([]);
-    
-    alert(movieToEdit ? "¡Película actualizada exitosamente!" : "¡Película agregada exitosamente!");
+    setVideoUrl("");
+
+    alert(
+      movieToEdit
+        ? "¡Película actualizada exitosamente!"
+        : "¡Película agregada exitosamente!",
+    );
     onClose();
   };
 
@@ -83,11 +153,13 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
         <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900 p-6 rounded-t-lg flex-shrink-0">
           <div>
             <h2 className="text-white text-2xl">
-              {movieToEdit ? "Editar Película" : "Panel de Administrador"}
+              {movieToEdit
+                ? "Editar Película"
+                : "Panel de Administrador"}
             </h2>
             <p className="text-white/60 text-sm mt-1">
-              {movieToEdit 
-                ? "Modifica la información de la película" 
+              {movieToEdit
+                ? "Modifica la información de la película"
                 : "Agrega una nueva película a la base de datos"}
             </p>
           </div>
@@ -101,7 +173,10 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
 
         {/* Formulario con scroll */}
         <div className="overflow-y-auto flex-1 px-6">
-          <form onSubmit={handleSubmit} className="py-6 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="py-6 space-y-6"
+          >
             {/* Título y Año */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
@@ -118,7 +193,9 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
                 />
               </div>
               <div>
-                <label className="block text-white mb-2">Año *</label>
+                <label className="block text-white mb-2">
+                  Año *
+                </label>
                 <input
                   type="number"
                   value={year}
@@ -135,7 +212,9 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
             {/* Género */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-white mb-2">Género *</label>
+                <label className="block text-white mb-2">
+                  Género *
+                </label>
                 <select
                   value={genre}
                   onChange={(e) => setGenre(e.target.value)}
@@ -153,7 +232,9 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
 
             {/* URL del Poster */}
             <div>
-              <label className="block text-white mb-2">URL de la imagen *</label>
+              <label className="block text-white mb-2">
+                URL de la imagen *
+              </label>
               <div className="flex gap-2">
                 <input
                   type="url"
@@ -173,13 +254,16 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
               </div>
               {poster && (
                 <div className="mt-3">
-                  <p className="text-white/60 text-sm mb-2">Vista previa:</p>
+                  <p className="text-white/60 text-sm mb-2">
+                    Vista previa:
+                  </p>
                   <img
                     src={poster}
                     alt="Preview"
                     className="h-40 w-auto rounded-lg object-cover"
                     onError={(e) => {
-                      e.currentTarget.src = "https://via.placeholder.com/300x450?text=Error";
+                      e.currentTarget.src =
+                        "https://via.placeholder.com/300x450?text=Error";
                     }}
                   />
                 </div>
@@ -188,7 +272,9 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
 
             {/* Descripción */}
             <div>
-              <label className="block text-white mb-2">Descripción *</label>
+              <label className="block text-white mb-2">
+                Descripción *
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -196,6 +282,78 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
                 placeholder="Escribe una descripción detallada de la película..."
                 required
               />
+            </div>
+
+            {/* ── NUEVO: URL del Vídeo ── */}
+            <div>
+              <label className="block text-white mb-2 flex items-center gap-2">
+                <Video size={18} className="text-purple-400" />
+                URL del vídeo{" "}
+                <span className="text-white/40 text-sm font-normal">
+                  (opcional)
+                </span>
+              </label>
+              <input
+                type="url"
+                value={videoUrl}
+                onChange={(e) => {
+                  setVideoUrl(e.target.value);
+                  setVideoError(false);
+                }}
+                className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="https://youtube.com/watch?v=... · Vimeo · .mp4 directo"
+              />
+              <p className="text-white/40 text-xs mt-1">
+                Soporta: YouTube, Vimeo y archivos de vídeo
+                directos (.mp4, .webm)
+              </p>
+
+              {/* Vista previa del vídeo */}
+              {videoUrl && (
+                <div className="mt-4">
+                  <p className="text-white/60 text-sm mb-2 flex items-center gap-1">
+                    <Play size={14} />
+                    Vista previa del vídeo:
+                  </p>
+
+                  {videoError ? (
+                    <div className="flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 h-48 text-white/40 text-sm gap-2">
+                      <Video size={20} />
+                      No se pudo cargar el vídeo. Verifica la
+                      URL.
+                    </div>
+                  ) : embedUrl && !directVideo ? (
+                    /* YouTube / Vimeo embed */
+                    <div
+                      className="relative w-full rounded-lg overflow-hidden bg-black"
+                      style={{ paddingTop: "56.25%" }}
+                    >
+                      <iframe
+                        src={embedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="Video preview"
+                        onError={() => setVideoError(true)}
+                      />
+                    </div>
+                  ) : directVideo ? (
+                    /* Archivo de vídeo directo */
+                    <video
+                      src={embedUrl!}
+                      controls
+                      className="w-full rounded-lg bg-black max-h-72"
+                      onError={() => setVideoError(true)}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center rounded-lg bg-zinc-800 border border-dashed border-zinc-600 h-48 text-white/40 text-sm gap-2">
+                      <Video size={20} />
+                      URL no reconocida. Usa YouTube, Vimeo o un
+                      .mp4 directo.
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Plataformas de Streaming */}
@@ -216,10 +374,14 @@ export function AdminPanel({ onClose, onAddMovie, onEditMovie, movieToEdit }: Ad
                     <input
                       type="checkbox"
                       checked={platforms.includes(platform)}
-                      onChange={() => handlePlatformToggle(platform)}
+                      onChange={() =>
+                        handlePlatformToggle(platform)
+                      }
                       className="h-5 w-5 rounded accent-purple-500"
                     />
-                    <span className="text-white">{platform}</span>
+                    <span className="text-white">
+                      {platform}
+                    </span>
                   </label>
                 ))}
               </div>
