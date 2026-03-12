@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Film } from "lucide-react";
 import { MovieCard } from "@/app/components/MovieCard";
 import { MovieModal } from "@/app/components/MovieModal";
@@ -8,6 +8,7 @@ import { LoginModal } from "@/app/components/LoginModal";
 import { AdminPanel } from "@/app/components/AdminPanel";
 import { movies as initialMovies } from "@/app/data/movies";
 import { Movie, Review } from "@/app/types/movie";
+import { supabase } from "@/lib/supabase";
 
 export default function App() {
   const [movies, setMovies] = useState<Movie[]>(initialMovies);
@@ -25,31 +26,45 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [movieToEdit, setMovieToEdit] = useState<Movie | null>(null);
 
-  const handleLogin = (email: string, password: string) => {
-    // Simulación de login - en producción esto se conectaría con un backend
-    setIsAuthenticated(true);
-    setUserName(email.split("@")[0]);
-    // Simular que el usuario es admin si el email contiene "admin"
-    setIsAdmin(email.toLowerCase().includes("admin"));
-  };
+  // Escuchar cambios de sesión de Supabase
+  useEffect(() => {
+    // Cargar sesión actual al montar
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        setIsAuthenticated(true);
+        setUserName(
+          user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? ""
+        );
+        setIsAdmin(user.app_metadata?.role === "admin");
+      }
+    });
 
-  const handleRegister = (
-    name: string,
-    email: string,
-    password: string,
-  ) => {
-    // Simulación de registro - en producción esto se conectaría con un backend
-    setIsAuthenticated(true);
-    setUserName(name);
-    // Simular que el usuario es admin si el email contiene "admin"
-    setIsAdmin(email.toLowerCase().includes("admin"));
-  };
+    // Suscribirse a cambios futuros (login, logout, registro)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          const user = session.user;
+          setIsAuthenticated(true);
+          setUserName(
+            user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? ""
+          );
+          setIsAdmin(user.app_metadata?.role === "admin");
+        } else {
+          setIsAuthenticated(false);
+          setUserName("");
+          setIsAdmin(false);
+          setFavorites([]);
+        }
+      }
+    );
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserName("");
-    setFavorites([]);
-    setIsAdmin(false);
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    // El resto del estado lo limpia onAuthStateChange
   };
 
   const toggleFavorite = (movie: Movie) => {
@@ -600,8 +615,6 @@ export default function App() {
       {isLoginModalOpen && (
         <LoginModal
           onClose={() => setIsLoginModalOpen(false)}
-          onLogin={handleLogin}
-          onRegister={handleRegister}
         />
       )}
 
