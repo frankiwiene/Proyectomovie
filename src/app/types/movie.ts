@@ -1,3 +1,10 @@
+export type ReactionType = "like" | "love" | "haha" | "wow" | "sad" | "angry" | "meh";
+
+export interface Reaction {
+  type: ReactionType;
+  users: string[];
+}
+
 export interface Review {
   id: string;
   userName: string;
@@ -8,6 +15,7 @@ export interface Review {
   dislikes: number;
   likedBy: string[];
   dislikedBy: string[];
+  reactions: Reaction[];
   reported: boolean;
   reportedBy: string[];
 }
@@ -17,6 +25,7 @@ export type StreamingPlatform = "Netflix" | "Prime Video" | "HBO"| "Disney +"| "
 export interface Movie {
   id: string;
   title: string;
+  englishTitle?: string;
   poster: string;
   year: number;
   rating: number;

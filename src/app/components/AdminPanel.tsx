@@ -17,9 +17,13 @@ interface AdminPanelProps {
     movie: Omit<Movie, "id">,
   ) => void;
   movieToEdit?: Movie | null;
+  availableGenres?: string[];
+  availablePlatforms?: StreamingPlatform[];
+  onAddGenre?: (genre: string) => void;
+  onAddPlatform?: (platform: string) => void;
 }
 
-const availableGenres = [
+const defaultGenres = [
   "Acción",
   "Drama",
   "Ciencia Ficción",
@@ -28,10 +32,13 @@ const availableGenres = [
   "Romance",
 ];
 
-const availablePlatforms: StreamingPlatform[] = [
+const defaultPlatforms: StreamingPlatform[] = [
   "Netflix",
   "Prime Video",
   "HBO",
+  "Disney +",
+  "Crunchy Roll",
+  "Apple Tv",
 ];
 
 function getEmbedUrl(url: string): string | null {
@@ -68,8 +75,15 @@ export function AdminPanel({
   onAddMovie,
   onEditMovie,
   movieToEdit,
+  availableGenres = defaultGenres,
+  availablePlatforms = defaultPlatforms,
+  onAddGenre,
+  onAddPlatform,
 }: AdminPanelProps) {
   const [title, setTitle] = useState(movieToEdit?.title || "");
+  const [englishTitle, setEnglishTitle] = useState(
+    movieToEdit?.englishTitle || "",
+  );
   const [year, setYear] = useState(
     movieToEdit?.year?.toString() || "",
   );
@@ -89,6 +103,11 @@ export function AdminPanel({
     (movieToEdit as any)?.videoUrl || "",
   );
   const [videoError, setVideoError] = useState(false);
+
+  const [showGenreInput, setShowGenreInput] = useState(false);
+  const [newGenre, setNewGenre] = useState("");
+  const [showPlatformInput, setShowPlatformInput] = useState(false);
+  const [newPlatform, setNewPlatform] = useState("");
 
   const embedUrl = getEmbedUrl(videoUrl);
   const directVideo = embedUrl && isDirectVideo(videoUrl);
@@ -115,6 +134,7 @@ export function AdminPanel({
 
     const newMovie: Omit<Movie, "id"> = {
       title,
+      englishTitle,
       year: parseInt(year),
       genre,
       description,
@@ -131,6 +151,7 @@ export function AdminPanel({
     }
 
     setTitle("");
+    setEnglishTitle("");
     setYear("");
     setGenre(availableGenres[0]);
     setDescription("");
@@ -155,7 +176,7 @@ export function AdminPanel({
             <h2 className="text-white text-2xl">
               {movieToEdit
                 ? "Editar Película"
-                : "Panel de Administrador"}
+                : "Panel de Reseña"}
             </h2>
             <p className="text-white/60 text-sm mt-1">
               {movieToEdit
@@ -192,6 +213,7 @@ export function AdminPanel({
                   required
                 />
               </div>
+
               <div>
                 <label className="block text-white mb-2">
                   Año *
@@ -209,24 +231,78 @@ export function AdminPanel({
               </div>
             </div>
 
+            {/* Título en inglés */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-white mb-2">
+                  Título en inglés
+                </label>
+                <input
+                  type="text"
+                  value={englishTitle}
+                  onChange={(e) => setEnglishTitle(e.target.value)}
+                  className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Ej: Inception"
+                />
+              </div>
+            </div>
+
             {/* Género */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-white mb-2">
                   Género *
                 </label>
-                <select
-                  value={genre}
-                  onChange={(e) => setGenre(e.target.value)}
-                  className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-purple-500"
-                  required
-                >
-                  {availableGenres.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={genre}
+                    onChange={(e) => setGenre(e.target.value)}
+                    className="flex-1 rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-purple-500"
+                    required
+                  >
+                    {availableGenres.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                  {onAddGenre && (
+                    <button
+                      type="button"
+                      onClick={() => setShowGenreInput(!showGenreInput)}
+                      className="rounded-lg bg-zinc-800 px-4 py-3 text-white transition-colors hover:bg-zinc-700"
+                      title="Agregar nueva categoría"
+                    >
+                      <Plus size={20} />
+                    </button>
+                  )}
+                </div>
+                {showGenreInput && onAddGenre && (
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      value={newGenre}
+                      onChange={(e) => setNewGenre(e.target.value)}
+                      placeholder="Nueva categoría..."
+                      className="flex-1 rounded-lg bg-zinc-800 px-4 py-2 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newGenre.trim()) {
+                          onAddGenre(newGenre.trim());
+                          setGenre(newGenre.trim());
+                          setNewGenre("");
+                          setShowGenreInput(false);
+                          alert("¡Categoría agregada exitosamente!");
+                        }
+                      }}
+                      className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
+                    >
+                      Agregar
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -358,9 +434,48 @@ export function AdminPanel({
 
             {/* Plataformas de Streaming */}
             <div>
-              <label className="block text-white mb-3">
-                Disponible en (selecciona al menos una) *
-              </label>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-white">
+                  Disponible en (selecciona al menos una) *
+                </label>
+                {onAddPlatform && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPlatformInput(!showPlatformInput)}
+                    className="flex items-center gap-2 rounded-lg bg-zinc-800 px-3 py-1.5 text-white text-sm transition-colors hover:bg-zinc-700"
+                  >
+                    <Plus size={16} />
+                    Nueva plataforma
+                  </button>
+                )}
+              </div>
+
+              {showPlatformInput && onAddPlatform && (
+                <div className="mb-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={newPlatform}
+                    onChange={(e) => setNewPlatform(e.target.value)}
+                    placeholder="Nombre de la plataforma..."
+                    className="flex-1 rounded-lg bg-zinc-800 px-4 py-2 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newPlatform.trim()) {
+                        onAddPlatform(newPlatform.trim());
+                        setNewPlatform("");
+                        setShowPlatformInput(false);
+                        alert("¡Plataforma agregada exitosamente!");
+                      }
+                    }}
+                    className="rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {availablePlatforms.map((platform) => (
                   <label

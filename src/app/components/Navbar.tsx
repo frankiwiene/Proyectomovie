@@ -11,17 +11,17 @@ interface NavbarProps {
   isAuthenticated: boolean;
   userName?: string;
   onLogout: () => void;
+  availableGenres?: string[];
 }
 
-const categories = [
-  "Todas",
-  "Acción",
-  "Drama",
-  "Ciencia Ficción",
-  "Comedia",
-  "Terror",
-  "Romance",
-];
+const defaultCategoryImages: Record<string, string> = {
+  Acción: "https://i.imgur.com/OFCoxfO.png",
+  Drama: "https://i.imgur.com/gUdDVw5.png",
+  "Ciencia Ficción": "https://i.imgur.com/ShQZ8Yp.png",
+  Comedia: "https://i.imgur.com/H7X42ox.png",
+  Terror: "https://i.imgur.com/Rokf9tN.png",
+  Romance: "https://i.imgur.com/NMdZhPx.png",
+};
 
 export function Navbar({
   onCategorySelect,
@@ -32,11 +32,34 @@ export function Navbar({
   isAuthenticated,
   userName,
   onLogout,
+  availableGenres = [
+    "Acción",
+    "Drama",
+    "Ciencia Ficción",
+    "Comedia",
+    "Terror",
+    "Romance",
+  ],
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [menuButtonRef, setMenuButtonRef] = useState<HTMLButtonElement | null>(null);
-  const [userButtonRef, setUserButtonRef] = useState<HTMLButtonElement | null>(null);
+  const [menuButtonRef, setMenuButtonRef] =
+    useState<HTMLButtonElement | null>(null);
+  const [userButtonRef, setUserButtonRef] =
+    useState<HTMLButtonElement | null>(null);
+
+  const categories = [
+    {
+      name: "Todas",
+      image: null,
+      emoji: "🎬",
+    },
+    ...availableGenres.map((genre) => ({
+      name: genre,
+      image: defaultCategoryImages[genre] || null,
+      emoji: null,
+    })),
+  ];
 
   const getMenuPosition = () => {
     if (!menuButtonRef) return {};
@@ -75,24 +98,61 @@ export function Navbar({
               className="fixed inset-0 z-[9998]"
               onClick={() => setIsMenuOpen(false)}
             />
-            <div 
-              className="fixed z-[9999] w-56 max-h-96 overflow-y-auto rounded-lg bg-zinc-800 shadow-xl border border-zinc-700"
+            <div
+              className="fixed z-[9999] w-72 max-h-[520px] overflow-y-auto rounded-xl bg-zinc-900 shadow-2xl border border-zinc-700"
               style={getMenuPosition()}
             >
-              <div className="p-2">
-                <div className="px-3 py-2 text-xs text-white/50 uppercase">
+              <div className="p-3">
+                <div className="px-3 py-2 text-xs font-semibold text-white/40 uppercase tracking-widest">
                   Categorías
                 </div>
                 {categories.map((category) => (
                   <button
-                    key={category}
+                    key={category.name}
                     onClick={() => {
-                      onCategorySelect(category);
+                      onCategorySelect(category.name);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full rounded-md px-3 py-2 text-left text-white transition-colors hover:bg-zinc-700"
+                    className="group w-full rounded-lg overflow-hidden mb-1.5 last:mb-0 transition-all hover:scale-[1.02] hover:shadow-lg focus:outline-none"
                   >
-                    {category}
+                    <div className="relative flex items-center gap-3 px-3 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
+                      {/* Thumbnail image */}
+                      <div className="relative w-12 h-12 rounded-md overflow-hidden flex-shrink-0 shadow-md bg-zinc-700 flex items-center justify-center">
+                        {category.image ? (
+                          <img
+                            src={category.image}
+                            alt={category.name}
+                            className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-300"
+                          />
+                        ) : category.emoji ? (
+                          <span className="text-2xl">
+                            {category.emoji}
+                          </span>
+                        ) : (
+                          <span className="text-2xl">📁</span>
+                        )}
+                      </div>
+                      {/* Text */}
+                      <div className="flex items-center gap-2 flex-1 text-left">
+                        <span className="text-white font-medium text-sm">
+                          {category.name}
+                        </span>
+                      </div>
+                      {/* Arrow indicator */}
+                      <svg
+                        className="w-4 h-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
                   </button>
                 ))}
                 <div className="my-2 h-px bg-zinc-700" />
@@ -127,7 +187,9 @@ export function Navbar({
               className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
             >
               <User size={20} />
-              <span className="hidden sm:inline">{userName}</span>
+              <span className="hidden sm:inline">
+                {userName}
+              </span>
             </button>
 
             {isUserMenuOpen && (
@@ -136,7 +198,7 @@ export function Navbar({
                   className="fixed inset-0 z-[9998]"
                   onClick={() => setIsUserMenuOpen(false)}
                 />
-                <div 
+                <div
                   className="fixed z-[9999] w-48 rounded-lg bg-zinc-800 shadow-xl border border-zinc-700"
                   style={getUserMenuPosition()}
                 >
@@ -151,7 +213,10 @@ export function Navbar({
                       }}
                       className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-white transition-colors hover:bg-zinc-700"
                     >
-                      <Shield size={16} className="text-blue-500" />
+                      <Shield
+                        size={16}
+                        className="text-blue-500"
+                      />
                       <span>Crear Reseña</span>
                     </button>
                     <button
@@ -174,7 +239,9 @@ export function Navbar({
             className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
           >
             <User size={20} />
-            <span className="hidden sm:inline">Iniciar sesión</span>
+            <span className="hidden sm:inline">
+              Iniciar sesión
+            </span>
           </button>
         )}
       </div>

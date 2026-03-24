@@ -23,6 +23,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r2",
@@ -36,6 +37,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r3",
@@ -49,6 +51,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -74,6 +77,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r5",
@@ -87,6 +91,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -112,6 +117,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r7",
@@ -125,6 +131,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r8",
@@ -138,6 +145,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -163,6 +171,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r10",
@@ -176,6 +185,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r11",
@@ -189,6 +199,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -214,6 +225,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r13",
@@ -227,6 +239,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r14",
@@ -240,6 +253,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r15",
@@ -253,6 +267,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -278,6 +293,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r17",
@@ -291,6 +307,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -316,6 +333,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r19",
@@ -329,6 +347,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -354,6 +373,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r21",
@@ -367,6 +387,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },
@@ -393,6 +414,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
       {
         id: "r23",
@@ -406,6 +428,7 @@ export const movies: Movie[] = [
         dislikedBy: [],
         reported: false,
         reportedBy: [],
+        reactions: [],
       },
     ],
   },

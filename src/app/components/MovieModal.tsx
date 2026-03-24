@@ -1,3 +1,5 @@
+/* TARJETAS DE RESEÑAS */
+
 import {
   X,
   Star,
@@ -9,14 +11,18 @@ import {
   ThumbsDown,
   Flag,
   Play,
+  AlertTriangle,
 } from "lucide-react";
 import {
   Movie,
   StreamingPlatform,
   Review,
+  ReactionType,
 } from "@/app/types/movie";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { useState } from "react";
+import { ReactionPicker, reactionEmojis } from "@/app/components/ReactionPicker";
+import { SuggestionModal } from "@/app/components/SuggestionModal";
 
 interface MovieModalProps {
   movie: Movie;
@@ -57,6 +63,20 @@ interface MovieModalProps {
     reviewId: string,
     userName: string,
   ) => void;
+  onReaction?: (
+    movieId: string,
+    reviewId: string,
+    reactionType: ReactionType,
+    userName: string,
+  ) => void;
+  onSuggestChange?: (
+    movieId: string,
+    suggestion: {
+      type: "title" | "synopsis" | "platform";
+      content: string;
+      userName: string;
+    },
+  ) => void;
 }
 
 const platformColors: Record<StreamingPlatform, string> = {
@@ -82,9 +102,12 @@ export function MovieModal({
   onLikeReview,
   onDislikeReview,
   onReportReview,
+  onReaction,
+  onSuggestChange,
 }: MovieModalProps) {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
 
   const handleAddReview = () => {
     if (onAddReview && currentUser) {
@@ -148,6 +171,17 @@ export function MovieModal({
           </button>
         )}
 
+        {/* Suggest Change Button (solo usuarios autenticados no admin) */}
+        {isAuthenticated && !isAdmin && currentUser && onSuggestChange && (
+          <button
+            onClick={() => setShowSuggestionModal(true)}
+            className="absolute right-28 top-4 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+            title="Sugerir cambios"
+          >
+            <AlertTriangle size={24} className="text-yellow-400" />
+          </button>
+        )}
+
         {/* Header con poster */}
         <div className="relative h-80 overflow-hidden">
           <ImageWithFallback
@@ -184,7 +218,7 @@ export function MovieModal({
             </div>
             {movie.rating === 0 && (
               <p className="text-white/50 text-sm mt-2">
-                Esta película aún no tiene reseñas. ¡Sé el
+                Esta película aún no tiene comentarios. ¡Sé el
                 primero en calificarla!
               </p>
             )}
@@ -216,7 +250,7 @@ export function MovieModal({
           {/* Descripción */}
           <div className="mb-8">
             <h3 className="text-white text-xl mb-3">
-              Descripción
+              Sinopsis
             </h3>
             <p className="text-white/80 leading-relaxed">
               {movie.description}
@@ -308,84 +342,70 @@ export function MovieModal({
                     {review.comment}
                   </p>
 
-                  {/* Botones de interacción: Like, Dislike y Reportar */}
+                  {/* Sistema de Reacciones estilo Facebook */}
                   <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {/* Like */}
-                      <button
-                        onClick={() => {
-                          if (
-                            isAuthenticated &&
-                            currentUser &&
-                            onLikeReview
-                          ) {
-                            onLikeReview(
-                              movie.id,
-                              review.id,
-                              currentUser,
-                            );
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {/* Picker de Reacciones */}
+                      {onReaction && currentUser && (
+                        <ReactionPicker
+                          onReact={(reactionType) => {
+                            if (isAuthenticated && currentUser) {
+                              onReaction(
+                                movie.id,
+                                review.id,
+                                reactionType,
+                                currentUser,
+                              );
+                            }
+                          }}
+                          currentUserReaction={
+                            isAuthenticated && currentUser
+                              ? (review.reactions || [])
+                                  .find((r) =>
+                                    r.users.includes(currentUser),
+                                  )?.type
+                              : null
                           }
-                        }}
-                        disabled={!isAuthenticated}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                          isAuthenticated &&
-                          currentUser &&
-                          review.likedBy.includes(currentUser)
-                            ? "bg-green-600/30 text-green-400"
-                            : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <ThumbsUp
-                          size={14}
-                          className={
-                            currentUser &&
-                            review.likedBy.includes(currentUser)
-                              ? "fill-green-400"
-                              : ""
-                          }
+                          disabled={!isAuthenticated}
                         />
-                        <span>{review.likes}</span>
-                      </button>
+                      )}
 
-                      {/* Dislike */}
-                      <button
-                        onClick={() => {
-                          if (
-                            isAuthenticated &&
-                            currentUser &&
-                            onDislikeReview
-                          ) {
-                            onDislikeReview(
-                              movie.id,
-                              review.id,
-                              currentUser,
-                            );
-                          }
-                        }}
-                        disabled={!isAuthenticated}
-                        className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                          isAuthenticated &&
-                          currentUser &&
-                          review.dislikedBy.includes(
-                            currentUser,
-                          )
-                            ? "bg-red-600/30 text-red-400"
-                            : "bg-zinc-700/50 text-white/70 hover:bg-zinc-700 hover:text-white"
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        <ThumbsDown
-                          size={14}
-                          className={
-                            currentUser &&
-                            review.dislikedBy.includes(
-                              currentUser,
-                            )
-                              ? "fill-red-400"
-                              : ""
-                          }
-                        />
-                        <span>{review.dislikes}</span>
-                      </button>
+                      {/* Resumen de reacciones */}
+                      {review.reactions && review.reactions.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          {review.reactions
+                            .filter((r) => r.users.length > 0)
+                            .sort((a, b) => b.users.length - a.users.length)
+                            .slice(0, 3)
+                            .map((reaction) => (
+                              <div
+                                key={reaction.type}
+                                className="flex items-center gap-1 bg-zinc-700/50 rounded-full px-2 py-1 text-xs"
+                                title={`${reaction.users.length} ${reactionEmojis[reaction.type].label}`}
+                              >
+                                {typeof reactionEmojis[reaction.type].emoji === "string" ? (
+                                  <span className="text-sm">
+                                    {reactionEmojis[reaction.type].emoji}
+                                  </span>
+                                ) : (
+                                  <img
+                                    src={reactionEmojis[reaction.type].emoji.props.src}
+                                    alt={reactionEmojis[reaction.type].emoji.props.alt}
+                                    className="w-4 h-4"
+                                  />
+                                )}
+                                <span className="text-white/70">
+                                  {reaction.users.length}
+                                </span>
+                              </div>
+                            ))}
+                          {review.reactions.reduce((sum, r) => sum + r.users.length, 0) > 0 && (
+                            <span className="text-white/50 text-xs ml-1">
+                              {review.reactions.reduce((sum, r) => sum + r.users.length, 0)} reacción{review.reactions.reduce((sum, r) => sum + r.users.length, 0) > 1 ? 'es' : ''}
+                            </span>
+                          )}
+                        </div>
+                      )}
 
                       {/* Reportar (solo usuarios autenticados no admin) */}
                       {isAuthenticated &&
@@ -560,6 +580,19 @@ export function MovieModal({
           )}
         </div>
       </div>
+
+      {/* Suggestion Modal */}
+      {showSuggestionModal && currentUser && onSuggestChange && (
+        <SuggestionModal
+          movie={movie}
+          onClose={() => setShowSuggestionModal(false)}
+          onSubmit={(suggestion) => {
+            onSuggestChange(movie.id, suggestion);
+            setShowSuggestionModal(false);
+          }}
+          currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }
