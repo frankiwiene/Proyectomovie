@@ -38,15 +38,15 @@ export function SuggestionModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[55] flex items-center justify-center bg-black/80 p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-zinc-900 rounded-lg"
+        className="relative w-full max-w-2xl bg-zinc-900 rounded-lg my-8 max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-800 p-6">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between border-b border-zinc-800 p-6 flex-shrink-0">
           <div>
             <h2 className="text-white text-2xl mb-1">
               Sugerir cambios
@@ -63,8 +63,8 @@ export function SuggestionModal({
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 space-y-6">
+        {/* Content - Scrollable */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
           {/* Tipo de sugerencia */}
           <div>
             <label className="block text-white mb-3">
@@ -169,22 +169,23 @@ export function SuggestionModal({
             </div>
           </div>
 
-          {/* Botones */}
-          <div className="flex gap-3 pt-4 border-t border-zinc-800">
-            <button
-              onClick={handleSubmit}
-              disabled={!content.trim()}
-              className="flex-1 rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:text-white/50"
-            >
-              Enviar sugerencia
-            </button>
-            <button
-              onClick={onClose}
-              className="rounded-lg bg-zinc-800 px-6 py-3 text-white transition-colors hover:bg-zinc-700"
-            >
-              Cancelar
-            </button>
-          </div>
+        </div>
+
+        {/* Botones - Fixed at bottom */}
+        <div className="flex gap-3 p-6 border-t border-zinc-800 flex-shrink-0 bg-zinc-900">
+          <button
+            onClick={handleSubmit}
+            disabled={!content.trim()}
+            className="flex-1 rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700 disabled:bg-zinc-700 disabled:cursor-not-allowed disabled:text-white/50"
+          >
+            Enviar sugerencia
+          </button>
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-zinc-800 px-6 py-3 text-white transition-colors hover:bg-zinc-700"
+          >
+            Cancelar
+          </button>
         </div>
       </div>
     </div>
