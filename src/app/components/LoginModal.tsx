@@ -3,24 +3,32 @@ import { X } from "lucide-react";
 
 interface LoginModalProps {
   onClose: () => void;
-  onLogin: (email: string, password: string) => void;
-  onRegister: (name: string, email: string, password: string) => void;
+  onLogin: (email: string, password: string) => Promise<void>;
+  onRegister: (name: string, email: string, password: string) => Promise<void>;
 }
 
 export function LoginModal({ onClose, onLogin, onRegister }: LoginModalProps) {
-  const [isLogin, setIsLogin] = useState(true);
+const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLogin) {
-      onLogin(email, password);
-    } else {
-      onRegister(name, email, password);
+    setIsLoading(true);
+    try {
+      if (isLogin) {
+        await onLogin(email, password);
+      } else {
+        await onRegister(name, email, password);
+      }
+      onClose();
+    } catch (error) {
+      // El error ya se maneja con alert() en App.tsx
+    } finally {
+      setIsLoading(false);
     }
-    onClose();
   };
 
   return (
@@ -85,9 +93,10 @@ export function LoginModal({ onClose, onLogin, onRegister }: LoginModalProps) {
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-purple-600 py-3 text-white transition-colors hover:bg-purple-700"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-purple-600 py-3 text-white transition-colors hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLogin ? "Iniciar sesión" : "Registrarse"}
+            {isLoading ? "Cargando..." : isLogin ? "Iniciar sesión" : "Registrarse"}
           </button>
         </form>
 
