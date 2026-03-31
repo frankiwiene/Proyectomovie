@@ -2,38 +2,39 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main, principal ]  # Se activa cuando Figma sube a main o principal
+    branches: [ main, principal ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write  # Permite escribir en gh-pages
+      contents: write
     
     steps:
-      # 1. Descargar el código
       - name: Checkout
         uses: actions/checkout@v4
       
-      # 2. Instalar Node.js
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
       
-      # 3. Instalar dependencias
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
       
-      # 4. Compilar el proyecto (esto es lo que faltaba!)
       - name: Build
-        run: npm run build
+        run: pnpm run build
       
-      # 5. Desplegar a GitHub Pages
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # Vite genera los archivos en la carpeta "dist"
+          publish_dir: ./dist
           publish_branch: gh-pages
