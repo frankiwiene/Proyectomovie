@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MovieCard } from "@/app/components/MovieCard";
 import { MovieModal } from "@/app/components/MovieModal";
 import { FeaturedCarousel } from "@/app/components/FeaturedCarousel";
@@ -7,6 +7,7 @@ import { LoginModal } from "@/app/components/LoginModal";
 import { AdminPanel } from "@/app/components/AdminPanel";
 import { movies as initialMovies } from "@/app/data/movies";
 import { Movie, Review, ReactionType, StreamingPlatform } from "@/app/types/movie";
+import { supabase } from "@/lib/supabase";
 
 export default function App() {
   const [movies, setMovies] = useState<Movie[]>(initialMovies);
@@ -45,27 +46,56 @@ export default function App() {
     "Apple Tv",
   ]);
 
-  const handleLogin = (email: string, password: string) => {
-    // Simulación de login - en producción esto se conectaría con un backend
+  useEffect(() => {
+    console.log('URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY);
+    supabase.from('movies').select('*').then(({ data, error }) => {
+      if (error) console.error('Error Supabase:', error);
+      else console.log('Conexión exitosa:', data);
+    });
+  }, []);
+
+  const handleLogin = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password 
+    });
+    
+    if (error) {
+      alert('Error al iniciar sesión: ' + error.message);
+      throw error;
+    }
+    
     setIsAuthenticated(true);
-    setUserName(email.split("@")[0]);
-    // Simular que el usuario es admin si el email contiene "admin"
-    setIsAdmin(email.toLowerCase().includes("admin"));
+    setUserName(data.user?.email?.split('@')[0] || '');
+    setIsAdmin(email.toLowerCase().includes('admin'));
   };
 
-  const handleRegister = (
+  const handleRegister = async (
     name: string,
     email: string,
     password: string,
   ) => {
-    // Simulación de registro - en producción esto se conectaría con un backend
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { 
+        data: { name } 
+      }
+    });
+    
+    if (error) {
+      alert('Error al registrarse: ' + error.message);
+      throw error;
+    }
+    
     setIsAuthenticated(true);
     setUserName(name);
-    // Simular que el usuario es admin si el email contiene "admin"
-    setIsAdmin(email.toLowerCase().includes("admin"));
+    setIsAdmin(email.toLowerCase().includes('admin'));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
     setUserName("");
     setFavorites([]);
