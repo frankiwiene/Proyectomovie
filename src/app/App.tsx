@@ -723,6 +723,7 @@ export default function App() {
           onReaction={handleReaction}
           onSuggestChange={handleSuggestChange}
           onDeleteMovie={handleDeleteMovie}
+          onOpenLogin={() => setIsLoginModalOpen(true)}
         />
       )}
 

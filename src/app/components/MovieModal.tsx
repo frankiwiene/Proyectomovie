@@ -78,6 +78,7 @@ interface MovieModalProps {
       userName: string;
     },
   ) => void;
+  onOpenLogin?: () => void;
 }
 
 const platformColors: Record<StreamingPlatform, string> = {
@@ -106,6 +107,7 @@ export function MovieModal({
   onReportReview,
   onReaction,
   onSuggestChange,
+  onOpenLogin,
 }: MovieModalProps) {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
@@ -612,9 +614,12 @@ export function MovieModal({
           {!isAuthenticated && (
             <div className="mt-8 rounded-lg bg-zinc-800 p-6 border-2 border-zinc-700 text-center">
               <p className="text-white/70">
-                <span className="text-purple-400">
+                <button
+                  onClick={onOpenLogin}
+                  className="text-purple-400 hover:text-purple-300 hover:underline transition-colors"
+                >
                   Inicia sesión
-                </span>{" "}
+                </button>{" "}
                 para dejar tu reseña y calificación
               </p>
             </div>
