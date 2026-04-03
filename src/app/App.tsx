@@ -5,12 +5,26 @@ import { FeaturedCarousel } from "@/app/components/FeaturedCarousel";
 import { Navbar } from "@/app/components/Navbar";
 import { LoginModal } from "@/app/components/LoginModal";
 import { AdminPanel } from "@/app/components/AdminPanel";
-import { movies as initialMovies } from "@/app/data/movies";
 import { Movie, Review, ReactionType, StreamingPlatform } from "@/app/types/movie";
 import { supabase } from "@/lib/supabase";
+import {
+  fetchMovies,
+  insertMovie,
+  updateMovie,
+  updateMovieRating,
+  insertReview,
+  deleteReview,
+  updateReviewLikes,
+  updateReviewReactions,
+  reportReview,
+  fetchFavorites,
+  addFavorite,
+  removeFavorite,
+} from "@/lib/movieService";
 
 export default function App() {
-  const [movies, setMovies] = useState<Movie[]>(initialMovies);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loadingMovies, setLoadingMovies] = useState(true);
   const [selectedMovie, setSelectedMovie] =
     useState<Movie | null>(null);
   const [favorites, setFavorites] = useState<Movie[]>([]);
@@ -24,6 +38,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [movieToEdit, setMovieToEdit] = useState<Movie | null>(
     null,
   );
@@ -47,28 +62,36 @@ export default function App() {
   ]);
 
   useEffect(() => {
-    console.log('URL:', import.meta.env.VITE_SUPABASE_URL);
-    console.log('KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY);
-    supabase.from('movies').select('*').then(({ data, error }) => {
-      if (error) console.error('Error Supabase:', error);
-      else console.log('Conexión exitosa:', data);
-    });
+    fetchMovies()
+      .then((data) => setMovies(data))
+      .catch((err) => console.error("Error cargando películas:", err))
+      .finally(() => setLoadingMovies(false));
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ 
-      email, 
-      password 
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
-    
+
     if (error) {
       alert('Error al iniciar sesión: ' + error.message);
       throw error;
     }
-    
+
+    const uid = data.user.id;
     setIsAuthenticated(true);
     setUserName(data.user?.email?.split('@')[0] || '');
     setIsAdmin(email.toLowerCase().includes('admin'));
+    setUserId(uid);
+
+    // Cargar favoritos guardados
+    fetchFavorites(uid)
+      .then((movieIds) => {
+        const favMovies = movies.filter((m) => movieIds.includes(m.id));
+        setFavorites(favMovies);
+      })
+      .catch((err) => console.error("Error cargando favoritos:", err));
   };
 
   const handleRegister = async (
@@ -76,22 +99,23 @@ export default function App() {
     email: string,
     password: string,
   ) => {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { 
-        data: { name } 
+      options: {
+        data: { name }
       }
     });
-    
+
     if (error) {
       alert('Error al registrarse: ' + error.message);
       throw error;
     }
-    
+
     setIsAuthenticated(true);
     setUserName(name);
     setIsAdmin(email.toLowerCase().includes('admin'));
+    if (data.user) setUserId(data.user.id);
   };
 
   const handleLogout = async () => {
@@ -100,71 +124,99 @@ export default function App() {
     setUserName("");
     setFavorites([]);
     setIsAdmin(false);
+    setUserId(null);
   };
 
   const toggleFavorite = (movie: Movie) => {
-    setFavorites((prev) => {
-      const isFavorite = prev.some(
-        (fav) => fav.id === movie.id,
-      );
-      if (isFavorite) {
-        return prev.filter((fav) => fav.id !== movie.id);
-      } else {
-        return [...prev, movie];
-      }
-    });
+    const isFavorite = favorites.some((fav) => fav.id === movie.id);
+
+    // Actualizar UI inmediatamente
+    setFavorites((prev) =>
+      isFavorite ? prev.filter((fav) => fav.id !== movie.id) : [...prev, movie],
+    );
+
+    // Persistir en Supabase si el usuario está autenticado
+    if (userId) {
+      const persist = isFavorite
+        ? removeFavorite(userId, movie.id)
+        : addFavorite(userId, movie.id);
+      persist.catch((err) => console.error("Error guardando favorito:", err));
+    }
   };
 
-  const handleAddMovie = (newMovie: Omit<Movie, "id">) => {
-    const movieWithId: Movie = {
-      ...newMovie,
-      id: (movies.length + 1).toString(),
-      rating: 0, // Inicia en 0, se calculará con las reseñas
-    };
-    setMovies((prev) => [...prev, movieWithId]);
+  const handleDeleteMovie = async (movieId: string) => {
+    try {
+      await supabase.from("movies").delete().eq("id", movieId);
+      setMovies((prev) => prev.filter((m) => m.id !== movieId));
+    } catch (err) {
+      console.error("Error al eliminar película:", err);
+      alert("No se pudo eliminar la película. Intenta de nuevo.");
+    }
   };
 
-  const handleEditMovie = (
+  const handleAddMovie = async (newMovie: Omit<Movie, "id">) => {
+    try {
+      const { reviews: _reviews, rating: _rating, ...movieData } = newMovie;
+      const created = await insertMovie(movieData);
+      setMovies((prev) => [...prev, created]);
+    } catch (err) {
+      console.error("Error al agregar película:", err);
+      alert("No se pudo guardar la película. Intenta de nuevo.");
+    }
+  };
+
+  const handleEditMovie = async (
     movieId: string,
     updatedMovie: Omit<Movie, "id">,
   ) => {
-    setMovies((prevMovies) =>
-      prevMovies.map((movie) =>
-        movie.id === movieId
-          ? {
-              ...updatedMovie,
-              id: movieId,
-              // Mantener las reseñas y el rating existente
-              reviews: movie.reviews,
-              rating: movie.rating,
-            }
-          : movie,
-      ),
-    );
+    try {
+      const { reviews: _reviews, rating: _rating, ...movieData } = updatedMovie;
+      await updateMovie(movieId, movieData);
 
-    // Actualizar selectedMovie si está abierto
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const movie = movies.find((m) => m.id === movieId);
-        if (movie) {
-          return {
-            ...updatedMovie,
-            id: movieId,
-            reviews: movie.reviews,
-            rating: movie.rating,
-          };
+      setMovies((prevMovies) =>
+        prevMovies.map((movie) =>
+          movie.id === movieId
+            ? { ...updatedMovie, id: movieId, reviews: movie.reviews, rating: movie.rating }
+            : movie,
+        ),
+      );
+
+      setSelectedMovie((prevSelected) => {
+        if (prevSelected && prevSelected.id === movieId) {
+          const movie = movies.find((m) => m.id === movieId);
+          if (movie) {
+            return { ...updatedMovie, id: movieId, reviews: movie.reviews, rating: movie.rating };
+          }
         }
-      }
-      return prevSelected;
-    });
+        return prevSelected;
+      });
 
-    setMovieToEdit(null);
+      setMovieToEdit(null);
+    } catch (err) {
+      console.error("Error al editar película:", err);
+      alert("No se pudo actualizar la película. Intenta de nuevo.");
+    }
   };
 
-  const handleDeleteReview = (
+  const handleDeleteReview = async (
     movieId: string,
     reviewId: string,
   ) => {
+    try {
+      await deleteReview(reviewId);
+      // Recalcular y guardar el nuevo rating en Supabase
+      const movie = movies.find((m) => m.id === movieId);
+      if (movie) {
+        const remaining = movie.reviews.filter((r) => r.id !== reviewId);
+        const newRating = remaining.length > 0
+          ? Math.round((remaining.reduce((a, r) => a + r.rating, 0) / remaining.length) * 10) / 10
+          : 0;
+        await updateMovieRating(movieId, newRating);
+      }
+    } catch (err) {
+      console.error("Error al eliminar reseña:", err);
+    }
+
     setMovies((prevMovies) => {
       return prevMovies.map((movie) => {
         if (movie.id === movieId) {
@@ -222,7 +274,7 @@ export default function App() {
     });
   };
 
-  const handleAddReview = (
+  const handleAddReview = async (
     movieId: string,
     review: Omit<
       Review,
@@ -236,88 +288,44 @@ export default function App() {
       | "reportedBy"
     >,
   ) => {
-    setMovies((prevMovies) => {
-      return prevMovies.map((movie) => {
-        if (movie.id === movieId) {
-          // Crear la nueva reseña con ID y fecha
-          const newReview: Review = {
-            ...review,
-            id: (movie.reviews.length + 1).toString(),
-            date: new Date().toLocaleDateString("es-ES", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-            likes: 0,
-            dislikes: 0,
-            likedBy: [],
-            dislikedBy: [],
-            reported: false,
-            reportedBy: [],
-            reactions: [],
-          };
+    try {
+      const savedReview = await insertReview(movieId, review);
 
-          // Agregar la reseña
-          const updatedReviews = [...movie.reviews, newReview];
+      // Calcular nuevo rating con la reseña guardada
+      const movie = movies.find((m) => m.id === movieId);
+      const updatedReviews = movie ? [...movie.reviews, savedReview] : [savedReview];
+      const roundedRating = Math.round(
+        (updatedReviews.reduce((a, r) => a + r.rating, 0) / updatedReviews.length) * 10,
+      ) / 10;
+      await updateMovieRating(movieId, roundedRating);
 
-          // Calcular el nuevo promedio de rating
-          const averageRating =
-            updatedReviews.reduce(
-              (acc, rev) => acc + rev.rating,
-              0,
-            ) / updatedReviews.length;
-          const roundedRating =
-            Math.round(averageRating * 10) / 10; // Redondear a 1 decimal
+      setMovies((prevMovies) =>
+        prevMovies.map((m) => {
+          if (m.id === movieId) {
+            const reviews = [...m.reviews, savedReview];
+            const rating = Math.round(
+              (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length) * 10,
+            ) / 10;
+            return { ...m, reviews, rating };
+          }
+          return m;
+        }),
+      );
 
-          return {
-            ...movie,
-            reviews: updatedReviews,
-            rating: roundedRating,
-          };
+      setSelectedMovie((prevSelected) => {
+        if (prevSelected && prevSelected.id === movieId) {
+          const reviews = [...prevSelected.reviews, savedReview];
+          const rating = Math.round(
+            (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length) * 10,
+          ) / 10;
+          return { ...prevSelected, reviews, rating };
         }
-        return movie;
+        return prevSelected;
       });
-    });
-
-    // Actualizar selectedMovie para reflejar los cambios inmediatamente
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const movie = movies.find((m) => m.id === movieId);
-        if (movie) {
-          const newReview: Review = {
-            ...review,
-            id: (movie.reviews.length + 1).toString(),
-            date: new Date().toLocaleDateString("es-ES", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }),
-            likes: 0,
-            dislikes: 0,
-            likedBy: [],
-            dislikedBy: [],
-            reported: false,
-            reportedBy: [],
-            reactions: [],
-          };
-          const updatedReviews = [...movie.reviews, newReview];
-          const averageRating =
-            updatedReviews.reduce(
-              (acc, rev) => acc + rev.rating,
-              0,
-            ) / updatedReviews.length;
-          const roundedRating =
-            Math.round(averageRating * 10) / 10;
-
-          return {
-            ...movie,
-            reviews: updatedReviews,
-            rating: roundedRating,
-          };
-        }
-      }
-      return prevSelected;
-    });
+    } catch (err) {
+      console.error("Error al agregar reseña:", err);
+      alert("No se pudo guardar la reseña. Intenta de nuevo.");
+    }
   };
 
   const handleLikeReview = (
@@ -325,109 +333,40 @@ export default function App() {
     reviewId: string,
     userName: string,
   ) => {
-    setMovies((prevMovies) => {
-      return prevMovies.map((movie) => {
-        if (movie.id === movieId) {
-          const updatedReviews = movie.reviews.map((review) => {
-            if (review.id === reviewId) {
-              const hasLiked =
-                review.likedBy.includes(userName);
-              const hasDisliked =
-                review.dislikedBy.includes(userName);
-
-              // Si ya dio like, quitar el like
-              if (hasLiked) {
-                return {
-                  ...review,
-                  likes: review.likes - 1,
-                  likedBy: review.likedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              // Si había dado dislike, quitarlo y dar like
-              if (hasDisliked) {
-                return {
-                  ...review,
-                  likes: review.likes + 1,
-                  dislikes: review.dislikes - 1,
-                  likedBy: [...review.likedBy, userName],
-                  dislikedBy: review.dislikedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              // Dar like por primera vez
-              return {
-                ...review,
-                likes: review.likes + 1,
-                likedBy: [...review.likedBy, userName],
-              };
-            }
-            return review;
-          });
-
-          return {
-            ...movie,
-            reviews: updatedReviews,
-          };
-        }
-        return movie;
-      });
-    });
-
-    // Actualizar selectedMovie
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const updatedReviews = prevSelected.reviews.map(
-          (review) => {
-            if (review.id === reviewId) {
-              const hasLiked =
-                review.likedBy.includes(userName);
-              const hasDisliked =
-                review.dislikedBy.includes(userName);
-
-              if (hasLiked) {
-                return {
-                  ...review,
-                  likes: review.likes - 1,
-                  likedBy: review.likedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              if (hasDisliked) {
-                return {
-                  ...review,
-                  likes: review.likes + 1,
-                  dislikes: review.dislikes - 1,
-                  likedBy: [...review.likedBy, userName],
-                  dislikedBy: review.dislikedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              return {
-                ...review,
-                likes: review.likes + 1,
-                likedBy: [...review.likedBy, userName],
-              };
-            }
-            return review;
-          },
-        );
-
-        return {
-          ...prevSelected,
-          reviews: updatedReviews,
-        };
+    const computeLike = (review: Review) => {
+      const hasLiked = review.likedBy.includes(userName);
+      const hasDisliked = review.dislikedBy.includes(userName);
+      if (hasLiked) {
+        return { ...review, likes: review.likes - 1, likedBy: review.likedBy.filter((u) => u !== userName) };
       }
-      return prevSelected;
-    });
+      if (hasDisliked) {
+        return { ...review, likes: review.likes + 1, dislikes: review.dislikes - 1, likedBy: [...review.likedBy, userName], dislikedBy: review.dislikedBy.filter((u) => u !== userName) };
+      }
+      return { ...review, likes: review.likes + 1, likedBy: [...review.likedBy, userName] };
+    };
+
+    // Persistir en Supabase (en background)
+    const movie = movies.find((m) => m.id === movieId);
+    const review = movie?.reviews.find((r) => r.id === reviewId);
+    if (review) {
+      const updated = computeLike(review);
+      updateReviewLikes(reviewId, updated.likes, updated.dislikes, updated.likedBy, updated.dislikedBy)
+        .catch((err) => console.error("Error al guardar like:", err));
+    }
+
+    setMovies((prevMovies) =>
+      prevMovies.map((m) =>
+        m.id === movieId
+          ? { ...m, reviews: m.reviews.map((r) => r.id === reviewId ? computeLike(r) : r) }
+          : m,
+      ),
+    );
+
+    setSelectedMovie((prev) =>
+      prev && prev.id === movieId
+        ? { ...prev, reviews: prev.reviews.map((r) => r.id === reviewId ? computeLike(r) : r) }
+        : prev,
+    );
   };
 
   const handleDislikeReview = (
@@ -435,109 +374,40 @@ export default function App() {
     reviewId: string,
     userName: string,
   ) => {
-    setMovies((prevMovies) => {
-      return prevMovies.map((movie) => {
-        if (movie.id === movieId) {
-          const updatedReviews = movie.reviews.map((review) => {
-            if (review.id === reviewId) {
-              const hasLiked =
-                review.likedBy.includes(userName);
-              const hasDisliked =
-                review.dislikedBy.includes(userName);
-
-              // Si ya dio dislike, quitar el dislike
-              if (hasDisliked) {
-                return {
-                  ...review,
-                  dislikes: review.dislikes - 1,
-                  dislikedBy: review.dislikedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              // Si había dado like, quitarlo y dar dislike
-              if (hasLiked) {
-                return {
-                  ...review,
-                  likes: review.likes - 1,
-                  dislikes: review.dislikes + 1,
-                  likedBy: review.likedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                  dislikedBy: [...review.dislikedBy, userName],
-                };
-              }
-
-              // Dar dislike por primera vez
-              return {
-                ...review,
-                dislikes: review.dislikes + 1,
-                dislikedBy: [...review.dislikedBy, userName],
-              };
-            }
-            return review;
-          });
-
-          return {
-            ...movie,
-            reviews: updatedReviews,
-          };
-        }
-        return movie;
-      });
-    });
-
-    // Actualizar selectedMovie
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const updatedReviews = prevSelected.reviews.map(
-          (review) => {
-            if (review.id === reviewId) {
-              const hasLiked =
-                review.likedBy.includes(userName);
-              const hasDisliked =
-                review.dislikedBy.includes(userName);
-
-              if (hasDisliked) {
-                return {
-                  ...review,
-                  dislikes: review.dislikes - 1,
-                  dislikedBy: review.dislikedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                };
-              }
-
-              if (hasLiked) {
-                return {
-                  ...review,
-                  likes: review.likes - 1,
-                  dislikes: review.dislikes + 1,
-                  likedBy: review.likedBy.filter(
-                    (user) => user !== userName,
-                  ),
-                  dislikedBy: [...review.dislikedBy, userName],
-                };
-              }
-
-              return {
-                ...review,
-                dislikes: review.dislikes + 1,
-                dislikedBy: [...review.dislikedBy, userName],
-              };
-            }
-            return review;
-          },
-        );
-
-        return {
-          ...prevSelected,
-          reviews: updatedReviews,
-        };
+    const computeDislike = (review: Review) => {
+      const hasLiked = review.likedBy.includes(userName);
+      const hasDisliked = review.dislikedBy.includes(userName);
+      if (hasDisliked) {
+        return { ...review, dislikes: review.dislikes - 1, dislikedBy: review.dislikedBy.filter((u) => u !== userName) };
       }
-      return prevSelected;
-    });
+      if (hasLiked) {
+        return { ...review, likes: review.likes - 1, dislikes: review.dislikes + 1, likedBy: review.likedBy.filter((u) => u !== userName), dislikedBy: [...review.dislikedBy, userName] };
+      }
+      return { ...review, dislikes: review.dislikes + 1, dislikedBy: [...review.dislikedBy, userName] };
+    };
+
+    // Persistir en Supabase (en background)
+    const movie = movies.find((m) => m.id === movieId);
+    const review = movie?.reviews.find((r) => r.id === reviewId);
+    if (review) {
+      const updated = computeDislike(review);
+      updateReviewLikes(reviewId, updated.likes, updated.dislikes, updated.likedBy, updated.dislikedBy)
+        .catch((err) => console.error("Error al guardar dislike:", err));
+    }
+
+    setMovies((prevMovies) =>
+      prevMovies.map((m) =>
+        m.id === movieId
+          ? { ...m, reviews: m.reviews.map((r) => r.id === reviewId ? computeDislike(r) : r) }
+          : m,
+      ),
+    );
+
+    setSelectedMovie((prev) =>
+      prev && prev.id === movieId
+        ? { ...prev, reviews: prev.reviews.map((r) => r.id === reviewId ? computeDislike(r) : r) }
+        : prev,
+    );
   };
 
   const handleReportReview = (
@@ -545,57 +415,32 @@ export default function App() {
     reviewId: string,
     userName: string,
   ) => {
-    setMovies((prevMovies) => {
-      return prevMovies.map((movie) => {
-        if (movie.id === movieId) {
-          const updatedReviews = movie.reviews.map((review) => {
-            if (review.id === reviewId) {
-              // Solo permitir reportar una vez por usuario
-              if (!review.reportedBy.includes(userName)) {
-                return {
-                  ...review,
-                  reported: true,
-                  reportedBy: [...review.reportedBy, userName],
-                };
-              }
-            }
-            return review;
-          });
+    const movie = movies.find((m) => m.id === movieId);
+    const review = movie?.reviews.find((r) => r.id === reviewId);
+    if (review && !review.reportedBy.includes(userName)) {
+      const newReportedBy = [...review.reportedBy, userName];
+      reportReview(reviewId, true, newReportedBy)
+        .catch((err) => console.error("Error al reportar reseña:", err));
+    }
 
-          return {
-            ...movie,
-            reviews: updatedReviews,
-          };
-        }
-        return movie;
-      });
-    });
-
-    // Actualizar selectedMovie
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const updatedReviews = prevSelected.reviews.map(
-          (review) => {
-            if (review.id === reviewId) {
-              if (!review.reportedBy.includes(userName)) {
-                return {
-                  ...review,
-                  reported: true,
-                  reportedBy: [...review.reportedBy, userName],
-                };
-              }
-            }
-            return review;
-          },
-        );
-
-        return {
-          ...prevSelected,
-          reviews: updatedReviews,
-        };
+    const applyReport = (review: Review) => {
+      if (review.id === reviewId && !review.reportedBy.includes(userName)) {
+        return { ...review, reported: true, reportedBy: [...review.reportedBy, userName] };
       }
-      return prevSelected;
-    });
+      return review;
+    };
+
+    setMovies((prevMovies) =>
+      prevMovies.map((m) =>
+        m.id === movieId ? { ...m, reviews: m.reviews.map(applyReport) } : m,
+      ),
+    );
+
+    setSelectedMovie((prev) =>
+      prev && prev.id === movieId
+        ? { ...prev, reviews: prev.reviews.map(applyReport) }
+        : prev,
+    );
   };
 
   const handleAddGenre = (genre: string) => {
@@ -639,193 +484,61 @@ export default function App() {
     reactionType: ReactionType,
     userName: string,
   ) => {
-    setMovies((prevMovies) => {
-      return prevMovies.map((movie) => {
-        if (movie.id === movieId) {
-          const updatedReviews = movie.reviews.map((review) => {
-            if (review.id === reviewId) {
-              const currentReactions = review.reactions || [];
-              
-              // Buscar si el usuario ya tiene una reacción
-              const userReactionIndex = currentReactions.findIndex((r) =>
-                r.users.includes(userName),
-              );
+    const computeReaction = (review: Review): Review => {
+      const currentReactions = review.reactions || [];
+      const userReactionIndex = currentReactions.findIndex((r) => r.users.includes(userName));
 
-              // Si el usuario ya reaccionó
-              if (userReactionIndex !== -1) {
-                const existingReaction = currentReactions[userReactionIndex];
-                
-                // Si es la misma reacción, la quitamos
-                if (existingReaction.type === reactionType) {
-                  return {
-                    ...review,
-                    reactions: currentReactions.map((r) =>
-                      r.type === reactionType
-                        ? {
-                            ...r,
-                            users: r.users.filter((u) => u !== userName),
-                          }
-                        : r,
-                    ).filter((r) => r.users.length > 0),
-                  };
-                }
-                
-                // Si es diferente, quitamos la anterior y agregamos la nueva
-                const withoutOldReaction = currentReactions.map((r) => ({
-                  ...r,
-                  users: r.users.filter((u) => u !== userName),
-                })).filter((r) => r.users.length > 0);
-
-                const newReactionExists = withoutOldReaction.find(
-                  (r) => r.type === reactionType,
-                );
-
-                if (newReactionExists) {
-                  return {
-                    ...review,
-                    reactions: withoutOldReaction.map((r) =>
-                      r.type === reactionType
-                        ? { ...r, users: [...r.users, userName] }
-                        : r,
-                    ),
-                  };
-                } else {
-                  return {
-                    ...review,
-                    reactions: [
-                      ...withoutOldReaction,
-                      { type: reactionType, users: [userName] },
-                    ],
-                  };
-                }
-              }
-
-              // Si el usuario no ha reaccionado, agregamos la reacción
-              const existingReaction = currentReactions.find(
-                (r) => r.type === reactionType,
-              );
-
-              if (existingReaction) {
-                return {
-                  ...review,
-                  reactions: currentReactions.map((r) =>
-                    r.type === reactionType
-                      ? { ...r, users: [...r.users, userName] }
-                      : r,
-                  ),
-                };
-              } else {
-                return {
-                  ...review,
-                  reactions: [
-                    ...currentReactions,
-                    { type: reactionType, users: [userName] },
-                  ],
-                };
-              }
-            }
-            return review;
-          });
-
-          return {
-            ...movie,
-            reviews: updatedReviews,
-          };
+      let newReactions;
+      if (userReactionIndex !== -1) {
+        const existing = currentReactions[userReactionIndex];
+        if (existing.type === reactionType) {
+          // Quitar misma reacción
+          newReactions = currentReactions
+            .map((r) => r.type === reactionType ? { ...r, users: r.users.filter((u) => u !== userName) } : r)
+            .filter((r) => r.users.length > 0);
+        } else {
+          // Cambiar a nueva reacción
+          const without = currentReactions
+            .map((r) => ({ ...r, users: r.users.filter((u) => u !== userName) }))
+            .filter((r) => r.users.length > 0);
+          const exists = without.find((r) => r.type === reactionType);
+          newReactions = exists
+            ? without.map((r) => r.type === reactionType ? { ...r, users: [...r.users, userName] } : r)
+            : [...without, { type: reactionType, users: [userName] }];
         }
-        return movie;
-      });
-    });
-
-    // Actualizar selectedMovie
-    setSelectedMovie((prevSelected) => {
-      if (prevSelected && prevSelected.id === movieId) {
-        const updatedReviews = prevSelected.reviews.map((review) => {
-          if (review.id === reviewId) {
-            const currentReactions = review.reactions || [];
-            
-            const userReactionIndex = currentReactions.findIndex((r) =>
-              r.users.includes(userName),
-            );
-
-            if (userReactionIndex !== -1) {
-              const existingReaction = currentReactions[userReactionIndex];
-              
-              if (existingReaction.type === reactionType) {
-                return {
-                  ...review,
-                  reactions: currentReactions.map((r) =>
-                    r.type === reactionType
-                      ? {
-                          ...r,
-                          users: r.users.filter((u) => u !== userName),
-                        }
-                      : r,
-                  ).filter((r) => r.users.length > 0),
-                };
-              }
-              
-              const withoutOldReaction = currentReactions.map((r) => ({
-                ...r,
-                users: r.users.filter((u) => u !== userName),
-              })).filter((r) => r.users.length > 0);
-
-              const newReactionExists = withoutOldReaction.find(
-                (r) => r.type === reactionType,
-              );
-
-              if (newReactionExists) {
-                return {
-                  ...review,
-                  reactions: withoutOldReaction.map((r) =>
-                    r.type === reactionType
-                      ? { ...r, users: [...r.users, userName] }
-                      : r,
-                  ),
-                };
-              } else {
-                return {
-                  ...review,
-                  reactions: [
-                    ...withoutOldReaction,
-                    { type: reactionType, users: [userName] },
-                  ],
-                };
-              }
-            }
-
-            const existingReaction = currentReactions.find(
-              (r) => r.type === reactionType,
-            );
-
-            if (existingReaction) {
-              return {
-                ...review,
-                reactions: currentReactions.map((r) =>
-                  r.type === reactionType
-                    ? { ...r, users: [...r.users, userName] }
-                    : r,
-                ),
-              };
-            } else {
-              return {
-                ...review,
-                reactions: [
-                  ...currentReactions,
-                  { type: reactionType, users: [userName] },
-                ],
-              };
-            }
-          }
-          return review;
-        });
-
-        return {
-          ...prevSelected,
-          reviews: updatedReviews,
-        };
+      } else {
+        // Primera reacción del usuario
+        const exists = currentReactions.find((r) => r.type === reactionType);
+        newReactions = exists
+          ? currentReactions.map((r) => r.type === reactionType ? { ...r, users: [...r.users, userName] } : r)
+          : [...currentReactions, { type: reactionType, users: [userName] }];
       }
-      return prevSelected;
-    });
+
+      return { ...review, reactions: newReactions };
+    };
+
+    // Persistir en Supabase (en background)
+    const movie = movies.find((m) => m.id === movieId);
+    const review = movie?.reviews.find((r) => r.id === reviewId);
+    if (review) {
+      const updated = computeReaction(review);
+      updateReviewReactions(reviewId, updated.reactions)
+        .catch((err) => console.error("Error al guardar reacción:", err));
+    }
+
+    setMovies((prevMovies) =>
+      prevMovies.map((m) =>
+        m.id === movieId
+          ? { ...m, reviews: m.reviews.map((r) => r.id === reviewId ? computeReaction(r) : r) }
+          : m,
+      ),
+    );
+
+    setSelectedMovie((prev) =>
+      prev && prev.id === movieId
+        ? { ...prev, reviews: prev.reviews.map((r) => r.id === reviewId ? computeReaction(r) : r) }
+        : prev,
+    );
   };
 
   const filteredMovies = useMemo(() => {
@@ -855,6 +568,14 @@ export default function App() {
     Romance: "https://i.imgur.com/NMdZhPx.png",
   };
 
+  if (loadingMovies) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+        <p className="text-white/60 text-lg">Cargando películas...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950">
       {/* Header */}
@@ -862,21 +583,26 @@ export default function App() {
         <div className="container mx-auto px-4 py-3">
           <div className={`flex items-center justify-between ${!showFavorites && selectedCategory !== "Todas" ? "h-36" : "h-20"}`}>
             <div className="flex items-center gap-3">
-              {!showFavorites && selectedCategory !== "Todas" ? (
-                categoryImages[selectedCategory] ? (
+              <button
+                onClick={() => { setSelectedCategory("Todas"); setShowFavorites(false); }}
+                className="cursor-pointer focus:outline-none"
+              >
+                {!showFavorites && selectedCategory !== "Todas" ? (
+                  categoryImages[selectedCategory] ? (
+                    <img
+                      src={categoryImages[selectedCategory]}
+                      alt={selectedCategory}
+                      className="w-32 h-32 object-cover object-top rounded-lg hover:opacity-80 transition-opacity"
+                    />
+                  ) : null
+                ) : (
                   <img
-                    src={categoryImages[selectedCategory]}
-                    alt={selectedCategory}
-                    className="w-32 h-32 object-cover object-top rounded-lg"
+                    src="https://i.imgur.com/MwsN8l5.png"
+                    alt="Filmario logo"
+                    className="w-27 h-27 object-contain hover:opacity-80 transition-opacity"
                   />
-                ) : null
-              ) : (
-                <img
-                  src="https://i.imgur.com/MwsN8l5.png"
-                  alt="Filmario logo"
-                  className="w-27 h-27 object-contain"
-                />
-              )}
+                )}
+              </button>
               <div className="flex flex-col justify-center">
                 <h1
                   className="text-white text-3xl"
@@ -996,6 +722,7 @@ export default function App() {
           onReportReview={handleReportReview}
           onReaction={handleReaction}
           onSuggestChange={handleSuggestChange}
+          onDeleteMovie={handleDeleteMovie}
         />
       )}
 

@@ -35,6 +35,8 @@ export function FeaturedCarousel({
     return () => clearInterval(interval);
   }, [currentIndex]);
 
+  if (movies.length === 0) return null;
+
   const currentMovie = movies[currentIndex];
 
   return (

@@ -48,6 +48,7 @@ interface MovieModalProps {
   onDeleteReview?: (movieId: string, reviewId: string) => void;
   isAdmin?: boolean;
   onEditMovie?: () => void;
+  onDeleteMovie?: (movieId: string) => void;
   onLikeReview?: (
     movieId: string,
     reviewId: string,
@@ -99,6 +100,7 @@ export function MovieModal({
   onDeleteReview,
   isAdmin,
   onEditMovie,
+  onDeleteMovie,
   onLikeReview,
   onDislikeReview,
   onReportReview,
@@ -108,6 +110,7 @@ export function MovieModal({
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
   const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleAddReview = () => {
     if (onAddReview && currentUser) {
@@ -169,6 +172,44 @@ export function MovieModal({
               className="fill-blue-500 text-blue-500"
             />
           </button>
+        )}
+
+        {/* Delete Movie Button */}
+        {isAdmin && onDeleteMovie && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="absolute right-52 top-4 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+            title="Eliminar película"
+          >
+            <Trash2 size={24} className="text-red-500" />
+          </button>
+        )}
+
+        {/* Confirmación eliminar película */}
+        {showDeleteConfirm && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/70 rounded-lg">
+            <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 mx-4 max-w-sm w-full text-center shadow-xl">
+              <Trash2 size={36} className="text-red-500 mx-auto mb-3" />
+              <h3 className="text-white text-lg font-semibold mb-1">¿Eliminar película?</h3>
+              <p className="text-zinc-400 text-sm mb-5">
+                Esta acción eliminará <span className="text-white font-medium">"{movie.title}"</span> y todas sus reseñas de forma permanente.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 rounded-lg bg-zinc-700 text-white text-sm hover:bg-zinc-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { onDeleteMovie(movie.id); onClose(); }}
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+                >
+                  Sí, eliminar
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Suggest Change Button (solo usuarios autenticados no admin) */}
