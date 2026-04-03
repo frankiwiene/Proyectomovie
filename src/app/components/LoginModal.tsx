@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 
 interface LoginModalProps {
   onClose: () => void;
@@ -12,10 +12,17 @@ const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isLogin && password !== confirmPassword) {
+      alert("Las contraseñas no coinciden.");
+      return;
+    }
     setIsLoading(true);
     try {
       if (isLogin) {
@@ -80,16 +87,53 @@ const [isLogin, setIsLogin] = useState(true);
             <label className="mb-2 block text-sm text-white/70">
               Contraseña
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
+            <div className="relative">
+              <input
+                type={!isLogin && showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg bg-zinc-800 px-4 py-3 pr-12 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+              {!isLogin && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              )}
+            </div>
           </div>
+
+          {!isLogin && (
+            <div>
+              <label className="mb-2 block text-sm text-white/70">
+                Confirmar contraseña
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-lg bg-zinc-800 px-4 py-3 pr-12 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+                >
+                  {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"
@@ -102,7 +146,7 @@ const [isLogin, setIsLogin] = useState(true);
 
         <div className="mt-4 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setIsLogin(!isLogin); setConfirmPassword(""); setShowPassword(false); setShowConfirm(false); }}
             className="text-sm text-purple-400 hover:text-purple-300"
           >
             {isLogin
