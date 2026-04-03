@@ -89,7 +89,7 @@ const [isLogin, setIsLogin] = useState(true);
             </label>
             <div className="relative">
               <input
-                type={!isLogin && showPassword ? "text" : "password"}
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg bg-zinc-800 px-4 py-3 pr-12 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
@@ -97,15 +97,13 @@ const [isLogin, setIsLogin] = useState(true);
                 required
                 minLength={6}
               />
-              {!isLogin && (
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
