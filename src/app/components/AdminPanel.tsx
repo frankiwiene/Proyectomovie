@@ -102,6 +102,9 @@ export function AdminPanel({
   const [videoUrl, setVideoUrl] = useState(
     (movieToEdit as any)?.videoUrl || "",
   );
+  const [duration, setDuration] = useState(
+    movieToEdit?.duration || "",
+  );
   const [videoError, setVideoError] = useState(false);
 
   const [showGenreInput, setShowGenreInput] = useState(false);
@@ -141,6 +144,7 @@ export function AdminPanel({
       poster,
       platforms,
       reviews: [],
+      ...(duration && { duration }),
       ...(videoUrl && { videoUrl }),
     } as any;
 
@@ -157,6 +161,7 @@ export function AdminPanel({
     setDescription("");
     setPoster("");
     setPlatforms([]);
+    setDuration("");
     setVideoUrl("");
 
     alert(
@@ -198,8 +203,8 @@ export function AdminPanel({
             onSubmit={handleSubmit}
             className="py-6 space-y-6"
           >
-            {/* Título y Año */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Título, Año y Duración */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-white mb-2">
                   Título de la película *
@@ -227,6 +232,19 @@ export function AdminPanel({
                   min="1900"
                   max="2100"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-white mb-2">
+                  Duración
+                </label>
+                <input
+                  type="text"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
+                  placeholder="Ej: 2h 28min"
                 />
               </div>
             </div>

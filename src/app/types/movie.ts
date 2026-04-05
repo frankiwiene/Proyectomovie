@@ -32,5 +32,6 @@ export interface Movie {
   description: string;
   genre: string;
   platforms: StreamingPlatform[];
+  duration?: string;
   reviews: Review[];
 }

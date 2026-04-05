@@ -258,6 +258,11 @@ export function MovieModal({
               <span className="text-white/70">
                 {movie.genre}
               </span>
+              {(movie as any).duration && (
+                <span className="text-white/70">
+                  {(movie as any).duration}
+                </span>
+              )}
             </div>
             {movie.rating === 0 && (
               <p className="text-white/50 text-sm mt-2">

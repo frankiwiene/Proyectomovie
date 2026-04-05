@@ -27,6 +27,7 @@ export async function insertMovie(
       description: movie.description,
       genre: movie.genre,
       platforms: movie.platforms,
+      duration: movie.duration ?? null,
       video_url: (movie as any).videoUrl ?? null,
       rating: 0,
     })
@@ -51,6 +52,7 @@ export async function updateMovie(
       description: movie.description,
       genre: movie.genre,
       platforms: movie.platforms,
+      duration: movie.duration ?? null,
       video_url: (movie as any).videoUrl ?? null,
     })
     .eq("id", id);
@@ -195,6 +197,7 @@ function dbMovieToMovie(row: any): Movie {
     description: row.description,
     genre: row.genre,
     platforms: row.platforms ?? [],
+    duration: row.duration ?? undefined,
     videoUrl: row.video_url ?? undefined,
     reviews: (row.reviews ?? []).map(dbReviewToReview),
   } as Movie & { videoUrl?: string };
