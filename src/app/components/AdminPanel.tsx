@@ -105,6 +105,9 @@ export function AdminPanel({
   const [duration, setDuration] = useState(
     movieToEdit?.duration || "",
   );
+  const [classification, setClassification] = useState(
+    movieToEdit?.classification || "",
+  );
   const [videoError, setVideoError] = useState(false);
 
   const [showGenreInput, setShowGenreInput] = useState(false);
@@ -145,6 +148,7 @@ export function AdminPanel({
       platforms,
       reviews: [],
       ...(duration && { duration }),
+      ...(classification && { classification }),
       ...(videoUrl && { videoUrl }),
     } as any;
 
@@ -162,6 +166,7 @@ export function AdminPanel({
     setPoster("");
     setPlatforms([]);
     setDuration("");
+    setClassification("");
     setVideoUrl("");
 
     alert(
@@ -246,6 +251,32 @@ export function AdminPanel({
                   className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white placeholder-white/50 outline-none focus:ring-2 focus:ring-purple-500"
                   placeholder="Ej: 2h 28min"
                 />
+              </div>
+            </div>
+
+            {/* Clasificación */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-white mb-2">
+                  Clasificación
+                </label>
+                <select
+                  value={classification}
+                  onChange={(e) => setClassification(e.target.value)}
+                  className="w-full rounded-lg bg-zinc-800 px-4 py-3 text-white outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="">Sin clasificar</option>
+                  <option value="G">G — Todo público</option>
+                  <option value="PG">PG — Guía parental</option>
+                  <option value="PG-13">PG-13 — Mayores de 13</option>
+                  <option value="R">R — Mayores de 17</option>
+                  <option value="NC-17">NC-17 — Solo adultos</option>
+                  <option value="ATP">ATP — Apta todo público</option>
+                  <option value="+7">+7 años</option>
+                  <option value="+13">+13 años</option>
+                  <option value="+16">+16 años</option>
+                  <option value="+18">+18 años</option>
+                </select>
               </div>
             </div>
 

@@ -303,6 +303,14 @@ export function MovieModal({
             <p className="text-white/80 leading-relaxed">
               {movie.description}
             </p>
+            {(movie as any).classification && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-white/50 text-sm">Clasificación:</span>
+                <span className="border border-white/30 text-white/70 text-sm font-semibold px-2 py-0.5 rounded">
+                  {(movie as any).classification}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Video */}
