@@ -62,8 +62,43 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    // Restaurar sesión activa al recargar la página
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const user = session.user;
+        const email = user.email ?? "";
+        const name = user.user_metadata?.name || email.split("@")[0];
+        setIsAuthenticated(true);
+        setUserName(name);
+        setIsAdmin(email.toLowerCase().includes("admin"));
+        setUserId(user.id);
+
+        // Cargar favoritos del usuario
+        fetchFavorites(user.id)
+          .then((movieIds) => {
+            // Los favoritos se cruzan con las películas una vez que carguen
+            setUserId(user.id); // se usará en el efecto de películas
+            return movieIds;
+          })
+          .catch((err) => console.error("Error cargando favoritos:", err));
+      }
+    });
+
     fetchMovies()
-      .then((data) => setMovies(data))
+      .then((data) => {
+        setMovies(data);
+        // Cargar favoritos cruzados con películas reales
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            fetchFavorites(session.user.id)
+              .then((movieIds) => {
+                const favMovies = data.filter((m) => movieIds.includes(m.id));
+                setFavorites(favMovies);
+              })
+              .catch((err) => console.error("Error cargando favoritos:", err));
+          }
+        });
+      })
       .catch((err) => console.error("Error cargando películas:", err))
       .finally(() => setLoadingMovies(false));
   }, []);
