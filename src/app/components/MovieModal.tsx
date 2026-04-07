@@ -235,11 +235,16 @@ export function MovieModal({
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/50 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <h2
-              className="text-white text-3xl mb-2"
+              className="text-white text-3xl mb-1"
               style={{ fontFamily: "Sneakers Pro, sans-serif" }}
             >
               {movie.title}
             </h2>
+            {movie.englishTitle && (
+              <p className="text-white/50 text-base mb-2">
+                {movie.englishTitle}
+              </p>
+            )}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Star
