@@ -7,7 +7,7 @@ import {
   Play,
   Video,
 } from "lucide-react";
-import { Movie, StreamingPlatform } from "@/app/types/movie";
+import { Movie, PlatformEntry } from "@/app/types/movie";
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -18,7 +18,7 @@ interface AdminPanelProps {
   ) => void;
   movieToEdit?: Movie | null;
   availableGenres?: string[];
-  availablePlatforms?: StreamingPlatform[];
+  availablePlatforms?: string[];
   onAddGenre?: (genre: string) => void;
   onAddPlatform?: (platform: string) => void;
 }
@@ -32,7 +32,7 @@ const defaultGenres = [
   "Romance",
 ];
 
-const defaultPlatforms: StreamingPlatform[] = [
+const defaultPlatforms: string[] = [
   "Netflix",
   "Prime Video",
   "HBO",
@@ -96,9 +96,9 @@ export function AdminPanel({
   const [poster, setPoster] = useState(
     movieToEdit?.poster || "",
   );
-  const [platforms, setPlatforms] = useState<
-    StreamingPlatform[]
-  >(movieToEdit?.platforms || []);
+  const [platforms, setPlatforms] = useState<PlatformEntry[]>(
+    movieToEdit?.platforms || [],
+  );
   const [videoUrl, setVideoUrl] = useState(
     (movieToEdit as any)?.videoUrl || "",
   );
@@ -118,13 +118,20 @@ export function AdminPanel({
   const embedUrl = getEmbedUrl(videoUrl);
   const directVideo = embedUrl && isDirectVideo(videoUrl);
 
-  const handlePlatformToggle = (
-    platform: StreamingPlatform,
+  const handlePlatformToggle = (platformName: string) => {
+    setPlatforms((prev) => {
+      const exists = prev.find((p) => p.name === platformName);
+      if (exists) return prev.filter((p) => p.name !== platformName);
+      return [...prev, { name: platformName, type: "subscription" }];
+    });
+  };
+
+  const handlePlatformTypeChange = (
+    platformName: string,
+    type: "subscription" | "rental",
   ) => {
     setPlatforms((prev) =>
-      prev.includes(platform)
-        ? prev.filter((p) => p !== platform)
-        : [...prev, platform],
+      prev.map((p) => p.name === platformName ? { ...p, type } : p),
     );
   };
 
@@ -132,9 +139,7 @@ export function AdminPanel({
     e.preventDefault();
 
     if (platforms.length === 0) {
-      alert(
-        "Debes seleccionar al menos una plataforma de streaming",
-      );
+      alert("Debes seleccionar al menos una plataforma de streaming");
       return;
     }
 
@@ -526,28 +531,58 @@ export function AdminPanel({
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {availablePlatforms.map((platform) => (
-                  <label
-                    key={platform}
-                    className={`flex items-center gap-3 rounded-lg border-2 p-4 cursor-pointer transition-all ${
-                      platforms.includes(platform)
-                        ? "border-purple-500 bg-purple-500/10"
-                        : "border-zinc-700 bg-zinc-800 hover:border-zinc-600"
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={platforms.includes(platform)}
-                      onChange={() =>
-                        handlePlatformToggle(platform)
-                      }
-                      className="h-5 w-5 rounded accent-purple-500"
-                    />
-                    <span className="text-white">
-                      {platform}
-                    </span>
-                  </label>
-                ))}
+                {availablePlatforms.map((platformName) => {
+                  const selected = platforms.find((p) => p.name === platformName);
+                  return (
+                    <div
+                      key={platformName}
+                      className={`rounded-lg border-2 p-3 transition-all ${
+                        selected
+                          ? "border-purple-500 bg-purple-500/10"
+                          : "border-zinc-700 bg-zinc-800 hover:border-zinc-600"
+                      }`}
+                    >
+                      <div
+                        className="flex items-center gap-3 cursor-pointer"
+                        onClick={() => handlePlatformToggle(platformName)}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!!selected}
+                          onChange={() => handlePlatformToggle(platformName)}
+                          className="h-5 w-5 rounded accent-purple-500"
+                        />
+                        <span className="text-white">{platformName}</span>
+                      </div>
+                      {selected && (
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handlePlatformTypeChange(platformName, "subscription")}
+                            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${
+                              selected.type === "subscription"
+                                ? "bg-purple-600 text-white"
+                                : "bg-zinc-700 text-white/50 hover:bg-zinc-600"
+                            }`}
+                          >
+                            Suscripción
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePlatformTypeChange(platformName, "rental")}
+                            className={`flex-1 text-xs py-1.5 rounded-md font-medium transition-colors ${
+                              selected.type === "rental"
+                                ? "bg-amber-600 text-white"
+                                : "bg-zinc-700 text-white/50 hover:bg-zinc-600"
+                            }`}
+                          >
+                            Renta
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

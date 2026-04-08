@@ -5,7 +5,7 @@ import { FeaturedCarousel } from "@/app/components/FeaturedCarousel";
 import { Navbar } from "@/app/components/Navbar";
 import { LoginModal } from "@/app/components/LoginModal";
 import { AdminPanel } from "@/app/components/AdminPanel";
-import { Movie, Review, ReactionType, StreamingPlatform } from "@/app/types/movie";
+import { Movie, Review, ReactionType } from "@/app/types/movie";
 import { supabase } from "@/lib/supabase";
 import {
   fetchMovies,
@@ -50,9 +50,7 @@ export default function App() {
     "Terror",
     "Romance",
   ]);
-  const [availablePlatforms, setAvailablePlatforms] = useState<
-    StreamingPlatform[]
-  >([
+  const [availablePlatforms, setAvailablePlatforms] = useState<string[]>([
     "Netflix",
     "Prime Video",
     "HBO",
@@ -485,11 +483,8 @@ export default function App() {
   };
 
   const handleAddPlatform = (platform: string) => {
-    if (!availablePlatforms.includes(platform as StreamingPlatform)) {
-      setAvailablePlatforms((prev) => [
-        ...prev,
-        platform as StreamingPlatform,
-      ]);
+    if (!availablePlatforms.includes(platform)) {
+      setAvailablePlatforms((prev) => [...prev, platform]);
     }
   };
 

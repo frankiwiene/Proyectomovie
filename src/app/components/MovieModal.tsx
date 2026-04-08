@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import {
   Movie,
-  StreamingPlatform,
   Review,
   ReactionType,
 } from "@/app/types/movie";
@@ -81,14 +80,25 @@ interface MovieModalProps {
   onOpenLogin?: () => void;
 }
 
-const platformColors: Record<StreamingPlatform, string> = {
+const knownPlatformColors: Record<string, string> = {
   Netflix: "bg-red-600",
   "Prime Video": "bg-blue-600",
   HBO: "bg-purple-600",
   "Disney +": "bg-blue-400",
   "Crunchy Roll": "bg-orange-400",
-  "Apple Tv": "bg-gray-400",
+  "Apple Tv": "bg-gray-500",
 };
+
+const randomColors = [
+  "bg-pink-600", "bg-teal-600", "bg-cyan-600", "bg-lime-600",
+  "bg-indigo-600", "bg-rose-600", "bg-emerald-600", "bg-violet-600",
+];
+
+function getPlatformColor(name: string): string {
+  if (knownPlatformColors[name]) return knownPlatformColors[name];
+  const index = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return randomColors[index % randomColors.length];
+}
 
 export function MovieModal({
   movie,
@@ -291,10 +301,13 @@ export function MovieModal({
             <div className="flex flex-wrap gap-3">
               {movie.platforms.map((platform) => (
                 <div
-                  key={platform}
-                  className={`${platformColors[platform]} rounded-lg px-4 py-2 text-white shadow-lg`}
+                  key={platform.name}
+                  className={`${getPlatformColor(platform.name)} rounded-lg px-4 py-2 text-white shadow-lg flex items-center gap-2`}
                 >
-                  {platform}
+                  <span>{platform.name}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${platform.type === "rental" ? "bg-amber-500/30 text-amber-200" : "bg-white/20 text-white/80"}`}>
+                    {platform.type === "rental" ? "Renta" : "Suscripción"}
+                  </span>
                 </div>
               ))}
             </div>

@@ -22,6 +22,11 @@ export interface Review {
 
 export type StreamingPlatform = "Netflix" | "Prime Video" | "HBO"| "Disney +"| "Crunchy Roll" | "Apple Tv";
 
+export interface PlatformEntry {
+  name: string;
+  type: "subscription" | "rental";
+}
+
 export interface Movie {
   id: string;
   title: string;
@@ -31,7 +36,7 @@ export interface Movie {
   rating: number;
   description: string;
   genre: string;
-  platforms: StreamingPlatform[];
+  platforms: PlatformEntry[];
   duration?: string;
   classification?: string;
   reviews: Review[];
