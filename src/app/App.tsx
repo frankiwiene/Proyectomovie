@@ -647,7 +647,7 @@ export default function App() {
       {/* Header */}
       <header className="relative z-50 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className={`flex items-center justify-between ${!showFavorites && selectedCategory !== "Todas" ? "h-24 sm:h-36" : "h-16 sm:h-20"}`}>
+          <div className={`flex items-center justify-between ${!showFavorites && selectedCategory !== "Todas" ? "h-32 sm:h-36" : "h-24 sm:h-20"}`}>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => { setSelectedCategory("Todas"); setShowFavorites(false); }}
