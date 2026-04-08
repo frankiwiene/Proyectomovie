@@ -672,7 +672,7 @@ export default function App() {
               <div className="flex flex-col justify-center">
                 <h1
                   className="text-white text-xl sm:text-3xl"
-                  style={{ fontFamily: "Yerk, 'Bebas Neue', sans-serif" }}
+                  style={{ fontFamily: "Yerk, sans-serif" }}
                 >
                   Filmario
                 </h1>
@@ -721,7 +721,7 @@ export default function App() {
             <div className="text-center">
               <h2
                 className="text-white text-3xl sm:text-5xl mb-4"
-                style={{ fontFamily: "Yerk, 'Bebas Neue', sans-serif" }}
+                style={{ fontFamily: "Yerk, sans-serif" }}
               >
                 {displayTitle}
               </h2>
