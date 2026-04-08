@@ -73,7 +73,7 @@ export function FeaturedCarousel({
                 {currentMovie.genre}
               </span>
             </div>
-            <p className="text-white/90 text-sm sm:text-lg line-clamp-2 hidden sm:block">
+            <p className="text-white/90 text-sm sm:text-lg line-clamp-4 hidden sm:block">
               {currentMovie.description}
             </p>
             <button className="mt-3 sm:mt-6 rounded-lg bg-purple-600 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-purple-700">
