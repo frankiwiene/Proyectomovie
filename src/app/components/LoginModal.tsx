@@ -16,6 +16,7 @@ const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,16 +28,47 @@ const [isLogin, setIsLogin] = useState(true);
     try {
       if (isLogin) {
         await onLogin(email, password);
+        onClose();
       } else {
         await onRegister(name, email, password);
+        setRegistered(true);
       }
-      onClose();
     } catch (error) {
       // El error ya se maneja con alert() en App.tsx
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (registered) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+        <div className="relative w-full max-w-md rounded-lg bg-zinc-900 p-8 shadow-xl text-center">
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 rounded-lg p-1 text-white/70 transition-colors hover:bg-zinc-800 hover:text-white"
+          >
+            <X size={24} />
+          </button>
+          <div className="text-5xl mb-4">📧</div>
+          <h2 className="text-2xl text-white mb-3">¡Revisa tu correo!</h2>
+          <p className="text-white/60 mb-2">
+            Te enviamos un enlace de confirmación a
+          </p>
+          <p className="text-purple-400 font-medium mb-6">{email}</p>
+          <p className="text-white/50 text-sm mb-6">
+            Haz click en el enlace del correo para activar tu cuenta. Luego podrás iniciar sesión normalmente.
+          </p>
+          <button
+            onClick={() => { setRegistered(false); setIsLogin(true); }}
+            className="w-full rounded-lg bg-purple-600 py-3 text-white transition-colors hover:bg-purple-700"
+          >
+            Ir a iniciar sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">

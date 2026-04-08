@@ -60,6 +60,40 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    // Escuchar cambios de autenticación (login, confirmación de correo, logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if ((event === "SIGNED_IN" || event === "USER_UPDATED") && session?.user) {
+          const user = session.user;
+          const email = user.email ?? "";
+          const name = user.user_metadata?.name || email.split("@")[0];
+          setIsAuthenticated(true);
+          setUserName(name);
+          setIsAdmin(email.toLowerCase().includes("admin"));
+          setUserId(user.id);
+          fetchFavorites(user.id)
+            .then((movieIds) => {
+              setFavorites((prev) => {
+                const favMovies = movies.filter((m) => movieIds.includes(m.id));
+                return favMovies.length > 0 ? favMovies : prev;
+              });
+            })
+            .catch(() => {});
+        }
+        if (event === "SIGNED_OUT") {
+          setIsAuthenticated(false);
+          setUserName("");
+          setFavorites([]);
+          setIsAdmin(false);
+          setUserId(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [movies]);
+
+  useEffect(() => {
     // Restaurar sesión activa al recargar la página
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -145,10 +179,8 @@ export default function App() {
       throw error;
     }
 
-    setIsAuthenticated(true);
-    setUserName(name);
-    setIsAdmin(email.toLowerCase().includes('admin'));
-    if (data.user) setUserId(data.user.id);
+    // Si session es null significa que Supabase requiere confirmación de correo
+    // No autenticamos hasta que confirme
   };
 
   const handleLogout = async () => {
