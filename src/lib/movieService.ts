@@ -198,7 +198,9 @@ function dbMovieToMovie(row: any): Movie {
     rating: row.rating ?? 0,
     description: row.description,
     genre: row.genre,
-    platforms: row.platforms ?? [],
+    platforms: (row.platforms ?? []).map((p: any) =>
+      typeof p === "string" ? { name: p, type: "subscription" } : p
+    ),
     duration: row.duration ?? undefined,
     classification: row.classification ?? undefined,
     videoUrl: row.video_url ?? undefined,
