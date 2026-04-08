@@ -42,7 +42,7 @@ export function FeaturedCarousel({
   return (
     <div className="relative overflow-hidden rounded-lg z-0">
       <div
-        className="relative h-[500px] cursor-pointer"
+        className="relative h-[260px] sm:h-[400px] md:h-[500px] cursor-pointer"
         onClick={() => onMovieClick(currentMovie)}
       >
         <ImageWithFallback
@@ -51,32 +51,32 @@ export function FeaturedCarousel({
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-8">
           <div className="max-w-2xl">
-            <h2 className="text-white text-4xl mb-3" style={{ fontFamily: 'Sneakers Pro, sans-serif' }}>
+            <h2 className="text-white text-xl sm:text-3xl md:text-4xl mb-2 sm:mb-3 line-clamp-1" style={{ fontFamily: 'Sneakers Pro, sans-serif' }}>
               {currentMovie.title}
             </h2>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 mb-2 sm:mb-4">
+              <div className="flex items-center gap-1">
                 <Star
                   className="fill-yellow-400 text-yellow-400"
-                  size={24}
+                  size={16}
                 />
-                <span className="text-white text-xl">
+                <span className="text-white text-sm sm:text-xl">
                   {currentMovie.rating}/10
                 </span>
               </div>
-              <span className="text-white/70 text-lg">
+              <span className="text-white/70 text-sm sm:text-lg">
                 {currentMovie.year}
               </span>
-              <span className="text-white/70 text-lg">
+              <span className="text-white/70 text-sm sm:text-lg hidden sm:inline">
                 {currentMovie.genre}
               </span>
             </div>
-            <p className="text-white/90 text-lg line-clamp-2">
+            <p className="text-white/90 text-sm sm:text-lg line-clamp-2 hidden sm:block">
               {currentMovie.description}
             </p>
-            <button className="mt-6 rounded-lg bg-purple-600 px-6 py-3 text-white transition-colors hover:bg-purple-700">
+            <button className="mt-3 sm:mt-6 rounded-lg bg-purple-600 px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-base text-white transition-colors hover:bg-purple-700">
               Ver detalles
             </button>
           </div>

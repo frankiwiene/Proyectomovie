@@ -10,3 +10,9 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* Fallbacks globales si los CDN externos no cargan */
+:root {
+  --font-title: "Sneakers Pro", "Georgia", serif;
+  --font-brand: "Yerk", "Impact", "Arial Black", sans-serif;
+}

@@ -647,7 +647,7 @@ export default function App() {
       {/* Header */}
       <header className="relative z-50 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className={`flex items-center justify-between ${!showFavorites && selectedCategory !== "Todas" ? "h-36" : "h-20"}`}>
+          <div className={`flex items-center justify-between ${!showFavorites && selectedCategory !== "Todas" ? "h-24 sm:h-36" : "h-16 sm:h-20"}`}>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => { setSelectedCategory("Todas"); setShowFavorites(false); }}
@@ -658,7 +658,7 @@ export default function App() {
                     <img
                       src={categoryImages[selectedCategory]}
                       alt={selectedCategory}
-                      className="w-32 h-32 object-cover object-top rounded-lg hover:opacity-80 transition-opacity"
+                      className="w-20 h-20 sm:w-32 sm:h-32 object-cover object-top rounded-lg hover:opacity-80 transition-opacity"
                     />
                   ) : null
                 ) : (
@@ -671,12 +671,12 @@ export default function App() {
               </button>
               <div className="flex flex-col justify-center">
                 <h1
-                  className="text-white text-3xl"
+                  className="text-white text-xl sm:text-3xl"
                   style={{ fontFamily: "Yerk, sans-serif" }}
                 >
                   Filmario
                 </h1>
-                <p className="text-white/60 text-sm mt-1">
+                <p className="text-white/60 text-xs sm:text-sm mt-1 hidden sm:block">
                   Descubre, califica y comparte tus películas
                   favoritas
                 </p>
@@ -720,7 +720,7 @@ export default function App() {
           {!showFavorites && selectedCategory !== "Todas" ? (
             <div className="text-center">
               <h2
-                className="text-white text-5xl mb-4"
+                className="text-white text-3xl sm:text-5xl mb-4"
                 style={{ fontFamily: "Yerk, sans-serif" }}
               >
                 {displayTitle}
@@ -729,10 +729,10 @@ export default function App() {
           ) : (
             <div className="flex items-center gap-6">
               <div>
-                <h2 className="text-white text-4xl mb-2">
+                <h2 className="text-white text-2xl sm:text-4xl mb-2">
                   {displayTitle}
                 </h2>
-                <p className="text-white/60 text-lg">
+                <p className="text-white/60 text-sm sm:text-lg">
                   {showFavorites
                     ? `Tienes ${favorites.length} película${favorites.length !== 1 ? "s" : ""} en favoritos`
                     : "Haz click en cualquier película para ver su descripción y reseñas"}

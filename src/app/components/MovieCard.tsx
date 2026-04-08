@@ -22,8 +22,8 @@ export function MovieCard({ movie, onClick }: MovieCardProps) {
       </div>
       <div className="p-4 bg-zinc-900 relative">
         <h3 className="text-white truncate" style={{ fontFamily: 'Sneakers Pro, sans-serif' }}>{movie.title}</h3>
-        <p className="text-purple-400 text-sm mt-1 opacity-0 transition-opacity group-hover:opacity-100">
-          Click para ver más
+        <p className="text-purple-400 text-sm mt-1 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+          Ver más
         </p>
         <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center gap-1">
