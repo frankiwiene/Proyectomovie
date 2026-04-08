@@ -713,8 +713,8 @@ export default function App() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {/* Featured Carousel - Only show when not filtering */}
-        {!showFavorites && selectedCategory === "Todas" && (
+        {/* Featured Carousel - Only show when not filtering or searching */}
+        {!showFavorites && selectedCategory === "Todas" && !searchQuery.trim() && (
           <div className="mb-12">
             <h2 className="text-white text-2xl mb-4">
               Destacadas
