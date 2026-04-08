@@ -28,11 +28,10 @@ const [isLogin, setIsLogin] = useState(true);
     try {
       if (isLogin) {
         await onLogin(email, password);
-        onClose();
       } else {
         await onRegister(name, email, password);
-        setRegistered(true);
       }
+      onClose();
     } catch (error) {
       // El error ya se maneja con alert() en App.tsx
     } finally {

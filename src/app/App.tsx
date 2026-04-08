@@ -179,8 +179,12 @@ export default function App() {
       throw error;
     }
 
-    // Si session es null significa que Supabase requiere confirmación de correo
-    // No autenticamos hasta que confirme
+    if (data.user) {
+      setIsAuthenticated(true);
+      setUserName(name);
+      setIsAdmin(email.toLowerCase().includes('admin'));
+      setUserId(data.user.id);
+    }
   };
 
   const handleLogout = async () => {
