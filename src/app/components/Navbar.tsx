@@ -64,18 +64,22 @@ export function Navbar({
   const getMenuPosition = () => {
     if (!menuButtonRef) return {};
     const rect = menuButtonRef.getBoundingClientRect();
+    const menuWidth = Math.min(288, window.innerWidth - 16);
+    const right = window.innerWidth - rect.right;
     return {
       top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
+      right: Math.max(8, right),
+      width: menuWidth,
     };
   };
 
   const getUserMenuPosition = () => {
     if (!userButtonRef) return {};
     const rect = userButtonRef.getBoundingClientRect();
+    const right = window.innerWidth - rect.right;
     return {
       top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
+      right: Math.max(8, right),
     };
   };
 
@@ -99,7 +103,7 @@ export function Navbar({
               onClick={() => setIsMenuOpen(false)}
             />
             <div
-              className="fixed z-[9999] w-72 max-h-[520px] overflow-y-auto rounded-xl bg-zinc-900 shadow-2xl border border-zinc-700"
+              className="fixed z-[9999] max-h-[70vh] overflow-y-auto rounded-xl bg-zinc-900 shadow-2xl border border-zinc-700"
               style={getMenuPosition()}
             >
               <div className="p-3">

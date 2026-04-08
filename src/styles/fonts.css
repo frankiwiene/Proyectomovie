@@ -1,5 +1,5 @@
-/* Yerk Regular - Para el título principal FILMARIO */
-@import url("https://use.typekit.net/gvo5hsa.css");
+/* Bebas Neue - Reemplazo para Yerk (similar, disponible en Google Fonts) */
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500&display=swap");
 
 /* Sneakers Pro Medium - Para títulos de películas */
 @font-face {
@@ -11,8 +11,9 @@
   font-display: swap;
 }
 
-/* Fallbacks globales si los CDN externos no cargan */
-:root {
-  --font-title: "Sneakers Pro", "Georgia", serif;
-  --font-brand: "Yerk", "Impact", "Arial Black", sans-serif;
+/* Yerk como alias de Bebas Neue para compatibilidad */
+@font-face {
+  font-family: "Yerk";
+  src: local("Bebas Neue");
+  font-display: swap;
 }
