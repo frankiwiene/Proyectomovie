@@ -198,9 +198,18 @@ function dbMovieToMovie(row: any): Movie {
     rating: row.rating ?? 0,
     description: row.description,
     genre: row.genre,
-    platforms: (row.platforms ?? []).map((p: any) =>
-      typeof p === "string" ? { name: p, type: "subscription" } : p
-    ),
+    platforms: (row.platforms ?? []).map((p: any) => {
+      if (typeof p === "string") {
+        // Intentar parsear si es un JSON string como '{"name":"Netflix","type":"subscription"}'
+        try {
+          const parsed = JSON.parse(p);
+          if (parsed.name) return parsed;
+        } catch {}
+        // Si no es JSON, es un nombre de plataforma simple
+        return { name: p, type: "subscription" };
+      }
+      return p;
+    }),
     duration: row.duration ?? undefined,
     classification: row.classification ?? undefined,
     videoUrl: row.video_url ?? undefined,
