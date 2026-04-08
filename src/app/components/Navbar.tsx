@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Heart, Menu, X, Shield } from "lucide-react";
+import { User, Heart, Menu, X, Shield, Search } from "lucide-react";
 import { Movie } from "@/app/types/movie";
 
 interface NavbarProps {
@@ -7,6 +7,7 @@ interface NavbarProps {
   onShowFavorites: () => void;
   onLoginClick: () => void;
   onAdminClick: () => void;
+  onSearch: (query: string) => void;
   favorites: Movie[];
   isAuthenticated: boolean;
   userName?: string;
@@ -28,6 +29,7 @@ export function Navbar({
   onShowFavorites,
   onLoginClick,
   onAdminClick,
+  onSearch,
   favorites,
   isAuthenticated,
   userName,
@@ -179,6 +181,17 @@ export function Navbar({
             </div>
           </>
         )}
+      </div>
+
+      {/* Buscador */}
+      <div className="relative flex items-center">
+        <Search size={16} className="absolute left-3 text-white/40 pointer-events-none" />
+        <input
+          type="text"
+          placeholder="Buscar..."
+          onChange={(e) => onSearch(e.target.value)}
+          className="bg-zinc-700/60 text-white placeholder-white/30 text-sm rounded-lg pl-8 pr-3 py-2 w-32 sm:w-48 outline-none focus:ring-1 focus:ring-purple-500 focus:bg-zinc-700 transition-all"
+        />
       </div>
 
       {/* User Menu */}

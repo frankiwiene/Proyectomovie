@@ -28,6 +28,7 @@ export default function App() {
   const [selectedMovie, setSelectedMovie] =
     useState<Movie | null>(null);
   const [favorites, setFavorites] = useState<Movie[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] =
     useState("Todas");
   const [showFavorites, setShowFavorites] = useState(false);
@@ -608,16 +609,24 @@ export default function App() {
   };
 
   const filteredMovies = useMemo(() => {
-    if (showFavorites) {
-      return favorites;
+    let base = showFavorites
+      ? favorites
+      : selectedCategory === "Todas"
+        ? movies
+        : movies.filter((movie) => movie.genre === selectedCategory);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      base = base.filter(
+        (movie) =>
+          movie.title.toLowerCase().includes(q) ||
+          (movie.englishTitle?.toLowerCase().includes(q)) ||
+          movie.genre.toLowerCase().includes(q),
+      );
     }
-    if (selectedCategory === "Todas") {
-      return movies;
-    }
-    return movies.filter(
-      (movie) => movie.genre === selectedCategory,
-    );
-  }, [selectedCategory, showFavorites, favorites, movies]);
+
+    return base;
+  }, [selectedCategory, showFavorites, favorites, movies, searchQuery]);
 
   const displayTitle = showFavorites
     ? "Mis Favoritos"
@@ -691,6 +700,7 @@ export default function App() {
               onShowFavorites={() => setShowFavorites(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
               onAdminClick={() => setIsAdminPanelOpen(true)}
+              onSearch={setSearchQuery}
               favorites={favorites}
               isAuthenticated={isAuthenticated}
               userName={userName}
