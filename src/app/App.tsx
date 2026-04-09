@@ -720,7 +720,17 @@ export default function App() {
               Destacadas
             </h2>
             <FeaturedCarousel
-              movies={movies}
+              movies={[...movies]
+                .filter((m) => m.rating > 0)
+                .sort((a, b) => b.rating - a.rating)
+                .slice(0, 5)
+                .concat(
+                  // Si hay menos de 2 con rating, completa con el resto para no dejar vacío
+                  [...movies]
+                    .filter((m) => m.rating === 0)
+                    .slice(0, Math.max(0, 2 - movies.filter((m) => m.rating > 0).length))
+                )
+              }
               onMovieClick={(movie) => setSelectedMovie(movie)}
             />
           </div>
