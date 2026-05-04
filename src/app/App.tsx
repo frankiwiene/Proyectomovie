@@ -679,12 +679,11 @@ export default function App() {
                 )}
               </button>
               <div className="flex flex-col justify-center">
-                <h1
-                  className="text-white text-xl sm:text-3xl"
-                  style={{ fontFamily: "Yerk, sans-serif" }}
-                >
-                  Filmario
-                </h1>
+                <img
+                  src="https://i.imgur.com/gk58ecS.png"
+                  alt="Filmario"
+                  className="h-8 sm:h-10 w-auto object-contain"
+                />
                 <p className="text-white/60 text-xs sm:text-sm mt-1 hidden sm:block">
                   Descubre, califica y comparte tus películas
                   favoritas

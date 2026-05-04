@@ -33,7 +33,7 @@ const [isLogin, setIsLogin] = useState(true);
       }
       onClose();
     } catch (error) {
-      // El error ya se maneja con alert() en App.tsx
+      
     } finally {
       setIsLoading(false);
     }
