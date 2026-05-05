@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { SEO } from "@/app/components/SEO";
 import { MovieCard } from "@/app/components/MovieCard";
 import { MovieModal } from "@/app/components/MovieModal";
 import { FeaturedCarousel } from "@/app/components/FeaturedCarousel";
@@ -653,6 +654,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
+      <SEO />
       {/* Header */}
       <header className="relative z-50 border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-3">
